@@ -6,6 +6,12 @@ const Dashboard: React.FC = () => {
   const { tenants, rooms, bills, expenses, loading, error } = useData();
 
   // Calculate stats
+  const statusList = [
+    'active', 'departing', 'left', 'pending', 'terminated', 'inactive', 'hold', 'prospective'
+  ];
+  const statusCounts = Object.fromEntries(
+    statusList.map(status => [status, tenants.filter(t => t.status === status).length])
+  );
   const activeTenants = tenants.filter(t => t.status === 'active').length;
   const totalRooms = rooms.length;
   const occupiedRooms = rooms.filter(r => r.status === 'occupied').length;
@@ -53,6 +59,14 @@ const Dashboard: React.FC = () => {
           <h1 className="text-3xl font-bold text-neutral-900">Dashboard Overview</h1>
           <p className="text-gray-600 mt-1">Welcome! Here’s what’s happening with your PG today.</p>
         </div>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-6">
+        {statusList.map(status => (
+          <div key={status} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col items-center">
+            <span className="text-2xl font-bold mb-1">{statusCounts[status]}</span>
+            <span className="text-xs text-gray-600 capitalize">{status}</span>
+          </div>
+        ))}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {statCards.map((stat, idx) => {

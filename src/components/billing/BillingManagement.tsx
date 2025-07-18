@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Bill, Tenant, Payment } from '../../types';
-import { Receipt, Plus, Send, Eye, Calendar, Clock, CheckCircle, Printer } from 'lucide-react';
+import { Receipt, Plus, Send, Eye, Calendar, Clock, CheckCircle, Printer, Trash2 } from 'lucide-react';
 import { formatCurrency, formatDate, calculateElectricityCharges, calculateTotalBill } from '../../utils/calculations';
 import { printReceipt, shareReceiptWhatsApp } from '../../utils/receiptGenerator';
 
@@ -23,6 +23,9 @@ const BillingManagement: React.FC<BillingManagementProps> = ({
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [editFormData, setEditFormData] = useState<any>(null);
 
   const totalBilled = bills.reduce((sum, bill) => sum + bill.totalAmount, 0);
   const totalPaid = bills.filter(bill => bill.paymentStatus === 'paid').reduce((sum, bill) => sum + bill.totalAmount, 0);
@@ -213,11 +216,25 @@ const BillingManagement: React.FC<BillingManagementProps> = ({
     if (!tenant) return null;
 
     const handlePrintReceipt = () => {
-      printReceipt(tenant, selectedBill, payment);
+      const tenant = tenants.find(t => t.id === selectedBill.tenantId);
+      if (!tenant) return;
+      printReceipt(
+        tenant,
+        selectedBill,
+        payments.find(p => p.billId === selectedBill.id)
+      );
     };
 
     const handleShareWhatsApp = () => {
-      shareReceiptWhatsApp(tenant, selectedBill, payment);
+      if (!selectedBill) return;
+      const tenant = tenants.find(t => t.id === selectedBill.tenantId);
+      if (!tenant) return;
+      // Use Indian country code by default, adjust as needed
+      const phone = `91${tenant.mobile}`;
+      const message = encodeURIComponent(
+        `Hi ${tenant.name}, your bill for ${selectedBill.billingPeriod} is ₹${selectedBill.totalAmount}. Please pay by ${selectedBill.dueDate}. Thank you!`
+      );
+      window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
     };
 
     return (
@@ -254,7 +271,7 @@ const BillingManagement: React.FC<BillingManagementProps> = ({
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <Printer className="h-4 w-4 mr-2 inline" />
-                Print Receipt
+                Print/Download
               </button>
               <button
                 onClick={handleShareWhatsApp}
@@ -277,6 +294,108 @@ const BillingManagement: React.FC<BillingManagementProps> = ({
     );
   };
 
+  // Edit Modal
+  const EditBillModal = () => {
+    if (!selectedBill || !editFormData) return null;
+    const tenant = tenants.find(t => t.id === editFormData.tenantId);
+    const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      setEditFormData({ ...editFormData, [e.target.name]: e.target.value });
+    };
+    const handleEditSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setProcessing(true);
+      try {
+        // Call backend update (assume onUpdateBill is passed as prop or use billsService)
+        if (typeof (window as any).onUpdateBill === 'function') {
+          await (window as any).onUpdateBill(selectedBill.id, editFormData);
+        }
+        setShowEditModal(false);
+        setSelectedBill(null);
+      } catch (error) {
+        alert('Failed to update bill.');
+      } finally {
+        setProcessing(false);
+      }
+    };
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-6 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">Edit Bill</h3>
+          </div>
+          <form onSubmit={handleEditSubmit} className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Tenant</label>
+              <select name="tenantId" value={editFormData.tenantId} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                {tenants.map(t => <option key={t.id} value={t.id}>{t.name} - Room {t.roomNumber}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Billing Period</label>
+              <input name="billingPeriod" type="month" value={editFormData.billingPeriod} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Rent Amount</label>
+              <input name="rentAmount" type="number" value={editFormData.rentAmount} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Electricity Charges</label>
+              <input name="electricityCharges" type="number" value={editFormData.electricityCharges} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Adjustments</label>
+              <input name="adjustments" type="number" value={editFormData.adjustments} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Total Amount</label>
+              <input name="totalAmount" type="number" value={editFormData.totalAmount} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+              <select name="paymentStatus" value={editFormData.paymentStatus} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                <option value="paid">Paid</option>
+                <option value="unpaid">Unpaid</option>
+                <option value="partial">Partial</option>
+              </select>
+            </div>
+            <div className="col-span-2 flex space-x-3 pt-4">
+              <button type="submit" disabled={processing} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50">{processing ? 'Saving...' : 'Save Changes'}</button>
+              <button type="button" onClick={() => setShowEditModal(false)} className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
+  // View Modal
+  const ViewBillModal = () => {
+    if (!selectedBill) return null;
+    const tenant = tenants.find(t => t.id === selectedBill.tenantId);
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-6 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">Bill Details</h3>
+          </div>
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><strong>Tenant:</strong> {tenant ? tenant.name : selectedBill.tenantId}</div>
+            <div><strong>Room:</strong> {tenant ? tenant.roomNumber : '-'}</div>
+            <div><strong>Billing Period:</strong> {selectedBill.billingPeriod}</div>
+            <div><strong>Rent Amount:</strong> {formatCurrency(selectedBill.rentAmount)}</div>
+            <div><strong>Electricity Charges:</strong> {formatCurrency(selectedBill.electricityCharges)}</div>
+            <div><strong>Adjustments:</strong> {formatCurrency(selectedBill.adjustments)}</div>
+            <div><strong>Total Amount:</strong> {formatCurrency(selectedBill.totalAmount)}</div>
+            <div><strong>Status:</strong> {selectedBill.paymentStatus}</div>
+          </div>
+          <div className="flex space-x-3 p-6 pt-0">
+            <button onClick={() => setShowViewModal(false)} className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">Close</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'paid': return 'bg-green-100 text-green-800';
@@ -293,6 +412,25 @@ const BillingManagement: React.FC<BillingManagementProps> = ({
       case 'partial': return Clock;
       default: return Clock;
     }
+  };
+
+  const keyTableFields = [
+    { key: 'tenant_id', label: 'Tenant' },
+    { key: 'billing_period', label: 'Period' },
+    { key: 'rent_amount', label: 'Rent' },
+    { key: 'electricity_charges', label: 'Electricity' },
+    { key: 'total_amount', label: 'Total' },
+    { key: 'payment_status', label: 'Status' },
+  ];
+
+  const handleShareWhatsAppRow = (bill: Bill) => {
+    const tenant = tenants.find(t => t.id === bill.tenantId);
+    if (!tenant) return;
+    const phone = `91${tenant.mobile}`;
+    const message = encodeURIComponent(
+      `Hi ${tenant.name}, your bill for ${bill.billingPeriod} is ₹${bill.totalAmount}. Please pay by ${bill.dueDate}. Thank you!`
+    );
+    window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
   };
 
   if (loading) {
@@ -366,91 +504,55 @@ const BillingManagement: React.FC<BillingManagementProps> = ({
       </div>
 
       {/* Bills List */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Recent Bills</h3>
-        </div>
-        
-        <div className="divide-y divide-gray-200">
-          {bills.map((bill) => {
-            const tenant = tenants.find(t => t.id === bill.tenantId);
-            const StatusIcon = getStatusIcon(bill.paymentStatus);
-            
-            if (!tenant) return null;
-
-            return (
-              <div key={bill.id} className="p-6 hover:bg-gray-50 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Receipt className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-medium text-gray-900">{tenant.name}</h4>
-                      <p className="text-sm text-gray-500">Room {tenant.roomNumber} • {bill.billingPeriod}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-6">
-                    <div className="text-right">
-                      <p className="text-lg font-semibold text-gray-900">{formatCurrency(bill.totalAmount)}</p>
-                      <p className="text-sm text-gray-500">Due: {formatDate(bill.dueDate)}</p>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <StatusIcon className="h-5 w-5 text-gray-400" />
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(bill.paymentStatus)}`}>
-                        {bill.paymentStatus}
-                      </span>
-                    </div>
-
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => {
-                          setSelectedBill(bill);
-                          setShowReceiptModal(true);
-                        }}
-                        className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-                        title="View Receipt"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          const payment = payments.find(p => p.billId === bill.id);
-                          shareReceiptWhatsApp(tenant, bill, payment);
-                        }}
-                        className="p-2 text-gray-400 hover:text-green-600 transition-colors"
-                        title="Share on WhatsApp"
-                      >
-                        <Send className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 grid grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <p className="text-gray-500">Rent</p>
-                    <p className="font-medium">{formatCurrency(bill.rentAmount)}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Electricity</p>
-                    <p className="font-medium">{formatCurrency(bill.electricityCharges)}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Adjustments</p>
-                    <p className="font-medium">{formatCurrency(bill.adjustments)}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Total</p>
-                    <p className="font-medium">{formatCurrency(bill.totalAmount)}</p>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 md:p-6 overflow-x-auto">
+        <table className="min-w-full border border-gray-200 text-xs">
+          <thead>
+            <tr>
+              {keyTableFields.map(col => (
+                <th key={col.key} className="px-3 py-2 text-left font-semibold text-gray-700 whitespace-nowrap border-b border-gray-200 border-r last:border-r-0">{col.label}</th>
+              ))}
+              <th className="px-3 py-2 text-left font-semibold text-gray-700 border-b border-gray-200">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={keyTableFields.length + 1} className="border-b border-gray-200">Loading...</td></tr>
+            ) : bills.length === 0 ? (
+              <tr><td colSpan={keyTableFields.length + 1} className="border-b border-gray-200">No bills found.</td></tr>
+            ) : bills.map(bill => {
+              const tenant = tenants.find(t => t.id === bill.tenantId);
+              return (
+                <tr key={bill.id} className="hover:bg-blue-50 border-b border-gray-200">
+                  {keyTableFields.map(col => {
+                    let value = (bill as any)[col.key];
+                    if (col.key === 'tenant_id') {
+                      return <td key={col.key} className="px-3 py-2 whitespace-nowrap border-r border-gray-200 last:border-r-0">{tenant ? tenant.name : value}</td>;
+                    }
+                    if (["rent_amount", "electricity_charges", "total_amount"].includes(col.key)) {
+                      return <td key={col.key} className="px-3 py-2 text-right border-r border-gray-200 last:border-r-0">{formatCurrency(Number(value)) ?? ''}</td>;
+                    }
+                    if (col.key === 'payment_status') {
+                      return <td key={col.key} className="px-3 py-2 border-r border-gray-200 last:border-r-0"><span className={`px-2 py-1 rounded-full text-xs font-semibold ${value === 'paid' ? 'bg-green-100 text-green-700' : value === 'unpaid' ? 'bg-red-100 text-red-700' : value === 'partial' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'}`}>{value}</span></td>;
+                    }
+                    return <td key={col.key} className="px-3 py-2 whitespace-nowrap border-r border-gray-200 last:border-r-0">{value ?? ''}</td>;
+                  })}
+                  <td className="px-3 py-2 flex space-x-2">
+                    <button title="View" onClick={() => { setSelectedBill(bill); setShowViewModal(true); }} className="p-1 rounded hover:bg-blue-100"><Eye className="h-4 w-4 text-blue-600" /></button>
+                    <button title="Edit" onClick={() => { setSelectedBill(bill); setEditFormData({ ...bill }); setShowEditModal(true); }} className="p-1 rounded hover:bg-yellow-100"><Calendar className="h-4 w-4 text-yellow-600" /></button>
+                    <button title="Delete" onClick={async () => {
+                      if (window.confirm('Delete this bill?')) {
+                        if (typeof (window as any).onDeleteBill === 'function') {
+                          await (window as any).onDeleteBill(bill.id);
+                        }
+                      }
+                    }} className="p-1 rounded hover:bg-red-100"><Trash2 className="h-4 w-4 text-red-600" /></button>
+                    <button title="Share bill on WhatsApp" onClick={() => handleShareWhatsAppRow(bill)} className="p-1 rounded hover:bg-green-100"><Send className="h-4 w-4 text-green-600" /></button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
 
       {bills.length === 0 && (
@@ -465,6 +567,11 @@ const BillingManagement: React.FC<BillingManagementProps> = ({
 
       {/* Receipt Modal */}
       {showReceiptModal && <ReceiptModal />}
+
+      {/* Edit Modal */}
+      {showEditModal && <EditBillModal />}
+      {/* View Modal */}
+      {showViewModal && <ViewBillModal />}
     </div>
   );
 };

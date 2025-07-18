@@ -124,7 +124,7 @@ function App() {
   const renderActiveTab = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard metrics={metrics} />;
+        return <Dashboard />;
       case 'rooms':
         return (
           <RoomManagement
@@ -135,15 +135,7 @@ function App() {
           />
         );
       case 'tenants':
-        return (
-          <TenantManagement
-            tenants={tenants}
-            rooms={rooms}
-            onAddTenant={addTenant}
-            onUpdateTenant={updateTenant}
-            loading={dataLoading}
-          />
-        );
+        return <TenantManagement />;
       case 'billing':
         return (
           <BillingManagement
@@ -151,7 +143,6 @@ function App() {
             tenants={tenants}
             payments={payments}
             onGenerateBill={generateBill}
-            onRecordPayment={recordPayment}
             loading={dataLoading}
           />
         );
@@ -163,7 +154,6 @@ function App() {
             payments={payments}
             onRecordPayment={recordPayment}
             onUpdateBill={updateBill}
-            loading={dataLoading}
           />
         );
       case 'expenses':
@@ -173,11 +163,10 @@ function App() {
             onAddExpense={addExpense}
             onUpdateExpense={updateExpense}
             onDeleteExpense={deleteExpense}
-            loading={dataLoading}
           />
         );
       default:
-        return <Dashboard metrics={metrics} />;
+        return <Dashboard />;
     }
   };
 

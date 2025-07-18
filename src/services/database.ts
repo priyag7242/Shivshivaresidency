@@ -253,6 +253,13 @@ export const roomsService = {
       status: data.status,
       tenantId: data.tenant_id
     };
+  },
+  async delete(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('rooms')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
   }
 };
 

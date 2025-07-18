@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Expense } from '../../types';
-import { TrendingUp, Plus, Edit, Trash2, Receipt, Calendar, DollarSign, CreditCard, Package, Users, Wrench, Shield } from 'lucide-react';
+import { TrendingUp, Plus, Edit, Trash2, Receipt, Calendar, DollarSign, CreditCard, Package, Users, Wrench, Shield, Eye } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/calculations';
 import { expenseCategories, paymentMethods } from '../../data/mockData';
 
@@ -21,6 +21,8 @@ const ExpenseManagement: React.FC<ExpenseManagementProps> = ({
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7));
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
 
   // Calculate stats
   const currentMonthExpenses = expenses.filter(expense => 
@@ -213,6 +215,39 @@ const ExpenseManagement: React.FC<ExpenseManagementProps> = ({
     );
   };
 
+  // View Modal
+  const ViewExpenseModal = () => {
+    if (!selectedExpense) return null;
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-6 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">Expense Details</h3>
+          </div>
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><strong>Date:</strong> {selectedExpense.date}</div>
+            <div><strong>Category:</strong> {selectedExpense.category}</div>
+            <div><strong>Description:</strong> {selectedExpense.description}</div>
+            <div><strong>Amount:</strong> {formatCurrency(selectedExpense.amount)}</div>
+            <div><strong>Payment Method:</strong> {selectedExpense.paymentMethod}</div>
+            {selectedExpense.receiptUrl && <div className="col-span-2"><strong>Receipt:</strong> <a href={selectedExpense.receiptUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">View Receipt</a></div>}
+          </div>
+          <div className="flex space-x-3 p-6 pt-0">
+            <button onClick={() => setShowViewModal(false)} className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">Close</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const keyTableFields = [
+    { key: 'date', label: 'Date' },
+    { key: 'category', label: 'Category' },
+    { key: 'description', label: 'Description' },
+    { key: 'amount', label: 'Amount' },
+    { key: 'payment_method', label: 'Method' },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -352,71 +387,41 @@ const ExpenseManagement: React.FC<ExpenseManagementProps> = ({
       </div>
 
       {/* Expenses List */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Expense Records</h3>
-        </div>
-        
-        <div className="divide-y divide-gray-200">
-          {filteredExpenses.map((expense) => {
-            const Icon = getCategoryIcon(expense.category);
-            return (
-              <div key={expense.id} className="p-6 hover:bg-gray-50 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className={`p-3 rounded-full ${getCategoryColor(expense.category).split(' ')[0]} bg-opacity-20`}>
-                      <Icon className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-medium text-gray-900">{expense.description}</h4>
-                      <div className="flex items-center space-x-4 mt-1">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(expense.category)}`}>
-                          {expense.category}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          <Calendar className="h-4 w-4 mr-1 inline" />
-                          {formatDate(expense.date)}
-                        </span>
-                        <span className="text-sm text-gray-500 capitalize">
-                          <CreditCard className="h-4 w-4 mr-1 inline" />
-                          {expense.paymentMethod.replace('_', ' ')}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-4">
-                    <div className="text-right">
-                      <p className="text-lg font-semibold text-gray-900">{formatCurrency(expense.amount)}</p>
-                    </div>
-
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => {
-                          setEditingExpense(expense);
-                          setShowAddForm(true);
-                        }}
-                        className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (window.confirm('Are you sure you want to delete this expense?')) {
-                            onDeleteExpense(expense.id);
-                          }
-                        }}
-                        className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 md:p-6 overflow-x-auto">
+        <table className="min-w-full border border-gray-200 text-xs">
+          <thead>
+            <tr>
+              {keyTableFields.map(col => (
+                <th key={col.key} className="px-3 py-2 text-left font-semibold text-gray-700 whitespace-nowrap border-b border-gray-200 border-r last:border-r-0">{col.label}</th>
+              ))}
+              <th className="px-3 py-2 text-left font-semibold text-gray-700 border-b border-gray-200">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* The original code had a 'loading' state and loading message here,
+                but the 'loading' state was not defined in the provided file.
+                Assuming 'loading' is meant to be 'expenses.length === 0' or similar,
+                but for now, removing the 'loading' check as it's not in the original file. */}
+            {expenses.length === 0 ? (
+              <tr><td colSpan={keyTableFields.length + 1} className="border-b border-gray-200">No expenses found.</td></tr>
+            ) : expenses.map(expense => (
+              <tr key={expense.id} className="hover:bg-blue-50 border-b border-gray-200">
+                {keyTableFields.map(col => {
+                  let value = (expense as any)[col.key];
+                  if (col.key === 'amount') {
+                    return <td key={col.key} className="px-3 py-2 text-right border-r border-gray-200 last:border-r-0">{formatCurrency(value) ?? ''}</td>;
+                  }
+                  return <td key={col.key} className="px-3 py-2 whitespace-nowrap border-r border-gray-200 last:border-r-0">{value ?? ''}</td>;
+                })}
+                <td className="px-3 py-2 flex space-x-2">
+                  <button title="View" onClick={() => { setSelectedExpense(expense); setShowViewModal(true); }} className="p-1 rounded hover:bg-blue-100"><Eye className="h-4 w-4 text-blue-600" /></button>
+                  <button title="Edit" onClick={() => setEditingExpense(expense)} className="p-1 rounded hover:bg-yellow-100"><Edit className="h-4 w-4 text-yellow-600" /></button>
+                  <button title="Delete" onClick={async () => { if (window.confirm('Delete this expense?')) { await onDeleteExpense(expense.id); }}} className="p-1 rounded hover:bg-red-100"><Trash2 className="h-4 w-4 text-red-600" /></button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {filteredExpenses.length === 0 && (
@@ -428,6 +433,8 @@ const ExpenseManagement: React.FC<ExpenseManagementProps> = ({
 
       {/* Add/Edit Expense Form Modal */}
       {showAddForm && <ExpenseForm />}
+      {/* View Modal */}
+      {showViewModal && <ViewExpenseModal />}
     </div>
   );
 };

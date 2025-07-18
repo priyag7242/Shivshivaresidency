@@ -139,6 +139,15 @@ export const useData = () => {
     }
   };
 
+  const deleteRoom = async (id: string) => {
+    try {
+      await roomsService.delete(id);
+      setRooms(prev => prev.filter(r => r.id !== id));
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to delete room');
+    }
+  };
+
   // Bill operations
   const generateBill = async (billData: Omit<Bill, 'id'>) => {
     try {
@@ -247,6 +256,7 @@ export const useData = () => {
     updateTenant,
     addRoom,
     updateRoom,
+    deleteRoom,
     generateBill,
     updateBill,
     recordPayment,
