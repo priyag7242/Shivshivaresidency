@@ -34,6 +34,7 @@ function App() {
     addExpense,
     updateExpense,
     deleteExpense,
+    deleteBill,
   } = useData();
 
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -149,6 +150,7 @@ function App() {
             tenants={tenants}
             payments={payments}
             onGenerateBill={generateBill}
+            onDeleteBill={deleteBill}
             loading={dataLoading}
           />
         );

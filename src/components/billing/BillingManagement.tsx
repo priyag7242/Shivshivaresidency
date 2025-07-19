@@ -9,6 +9,7 @@ interface BillingManagementProps {
   tenants: Tenant[];
   payments: Payment[];
   onGenerateBill: (bill: Omit<Bill, 'id'>) => Promise<Bill>;
+  onDeleteBill?: (id: string) => Promise<void>;
   loading?: boolean;
 }
 
@@ -17,6 +18,7 @@ const BillingManagement: React.FC<BillingManagementProps> = ({
   tenants, 
   payments, 
   onGenerateBill, 
+  onDeleteBill,
   loading = false
 }) => {
   const [showGenerateForm, setShowGenerateForm] = useState(false);
@@ -592,8 +594,8 @@ const BillingManagement: React.FC<BillingManagementProps> = ({
                     <button title="Edit" onClick={() => { setSelectedBill(bill); setEditFormData({ ...bill }); setShowEditModal(true); }} className="p-1 rounded hover:bg-yellow-100"><Calendar className="h-4 w-4 text-yellow-600" /></button>
                     <button title="Delete" onClick={async () => {
                       if (window.confirm('Delete this bill?')) {
-                        if (typeof (window as any).onDeleteBill === 'function') {
-                          await (window as any).onDeleteBill(bill.id);
+                        if (onDeleteBill) {
+                          await onDeleteBill(bill.id);
                         }
                       }
                     }} className="p-1 rounded hover:bg-red-100"><Trash2 className="h-4 w-4 text-red-600" /></button>

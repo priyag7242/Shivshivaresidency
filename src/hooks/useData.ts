@@ -186,6 +186,15 @@ export const useData = () => {
     }
   };
 
+  const deleteBill = async (id: string) => {
+    try {
+      await billsService.delete(id);
+      setBills(prev => prev.filter(b => b.id !== id));
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to delete bill');
+    }
+  };
+
   // Payment operations
   const recordPayment = async (paymentData: Omit<Payment, 'id'>) => {
     try {
@@ -259,6 +268,7 @@ export const useData = () => {
     deleteRoom,
     generateBill,
     updateBill,
+    deleteBill,
     recordPayment,
     addExpense,
     updateExpense,

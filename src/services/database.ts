@@ -268,7 +268,7 @@ export const billsService = {
   // Test database connectivity
   async testConnection(): Promise<boolean> {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('bills')
         .select('count')
         .limit(1);
@@ -436,6 +436,15 @@ export const billsService = {
       paymentMethod: bill.payment_method,
       dueDate: bill.due_date
     }));
+  },
+
+  async delete(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('bills')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
   }
 };
 
@@ -622,7 +631,7 @@ export const testDatabaseConnection = async () => {
     console.log('Testing database connection...');
     
     // Test basic connection
-    const { data: testData, error: testError } = await supabase
+    const { error: testError } = await supabase
       .from('tenants')
       .select('count')
       .limit(1);
