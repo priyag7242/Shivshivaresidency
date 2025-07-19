@@ -439,12 +439,34 @@ export const billsService = {
   },
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('bills')
-      .delete()
-      .eq('id', id);
-    
-    if (error) throw error;
+    try {
+      // First, delete any associated payments
+      const { error: paymentsError } = await supabase
+        .from('payments')
+        .delete()
+        .eq('bill_id', id);
+      
+      if (paymentsError) {
+        console.error('Error deleting associated payments:', paymentsError);
+        throw paymentsError;
+      }
+
+      // Then delete the bill
+      const { error: billError } = await supabase
+        .from('bills')
+        .delete()
+        .eq('id', id);
+      
+      if (billError) {
+        console.error('Error deleting bill:', billError);
+        throw billError;
+      }
+
+      console.log('Bill and associated payments deleted successfully');
+    } catch (error) {
+      console.error('Error in delete bill:', error);
+      throw error;
+    }
   }
 };
 

@@ -594,8 +594,18 @@ const BillingManagement: React.FC<BillingManagementProps> = ({
                     <button title="Edit" onClick={() => { setSelectedBill(bill); setEditFormData({ ...bill }); setShowEditModal(true); }} className="p-1 rounded hover:bg-yellow-100"><Calendar className="h-4 w-4 text-yellow-600" /></button>
                     <button title="Delete" onClick={async () => {
                       if (window.confirm('Delete this bill?')) {
-                        if (onDeleteBill) {
-                          await onDeleteBill(bill.id);
+                        try {
+                          console.log('Attempting to delete bill:', bill.id);
+                          if (onDeleteBill) {
+                            await onDeleteBill(bill.id);
+                            console.log('Bill deleted successfully');
+                          } else {
+                            console.error('onDeleteBill function is not available');
+                            alert('Delete function not available');
+                          }
+                        } catch (error) {
+                          console.error('Error deleting bill:', error);
+                          alert(`Failed to delete bill: ${error instanceof Error ? error.message : 'Unknown error'}`);
                         }
                       }
                     }} className="p-1 rounded hover:bg-red-100"><Trash2 className="h-4 w-4 text-red-600" /></button>
