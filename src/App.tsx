@@ -4,6 +4,7 @@ import Dashboard from './components/Dashboard';
 import RoomManagement from './components/rooms/RoomManagement';
 import RoomStatusView from './components/rooms/RoomStatusView';
 import TenantManagement from './components/tenants/TenantManagement';
+import ElectricityManagement from './components/electricity/ElectricityManagement';
 import BillingManagement from './components/billing/BillingManagement';
 import PaymentManagement from './components/payments/PaymentManagement';
 import ExpenseManagement from './components/expenses/ExpenseManagement';
@@ -139,6 +140,8 @@ function App() {
         return <RoomStatusView />;
       case 'tenants':
         return <TenantManagement />;
+      case 'electricity':
+        return <ElectricityManagement />;
       case 'billing':
         return (
           <BillingManagement

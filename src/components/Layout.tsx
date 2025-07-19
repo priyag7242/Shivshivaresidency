@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Users, Building, Receipt, CreditCard, TrendingUp, LogOut, MapPin } from 'lucide-react';
+import { Home, Users, Building, Receipt, CreditCard, TrendingUp, LogOut, MapPin, Zap } from 'lucide-react';
 import { useAuth, AuthUser } from '../hooks/useAuth';
 
 interface LayoutProps {
@@ -17,6 +17,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, user 
     { id: 'rooms', icon: Building, label: 'Rooms' },
     { id: 'room-status', icon: MapPin, label: 'Room Status' },
     { id: 'tenants', icon: Users, label: 'Tenants' },
+    { id: 'electricity', icon: Zap, label: 'Electricity' },
     { id: 'billing', icon: Receipt, label: 'Billing' },
     { id: 'payments', icon: CreditCard, label: 'Payments' },
     { id: 'expenses', icon: TrendingUp, label: 'Expenses' }

@@ -1,9 +1,27 @@
-import React from 'react';
-import { Users, Building, DollarSign, TrendingUp, CheckCircle, Shield, Home } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Users, Building, DollarSign, TrendingUp, CheckCircle, Shield, Home, Zap } from 'lucide-react';
 import { useData } from '../hooks/useData';
+import { supabase } from '../lib/supabase';
+
+interface ElectricityStats {
+  totalUnits: number;
+  totalAmount: number;
+  totalCollected: number;
+  pendingAmount: number;
+  currentMonthUnits: number;
+  currentMonthAmount: number;
+}
 
 const Dashboard: React.FC = () => {
   const { tenants, rooms, bills, expenses, loading, error } = useData();
+  const [electricityStats, setElectricityStats] = useState<ElectricityStats>({
+    totalUnits: 0,
+    totalAmount: 0,
+    totalCollected: 0,
+    pendingAmount: 0,
+    currentMonthUnits: 0,
+    currentMonthAmount: 0
+  });
 
   // Calculate stats based on actual tenant statuses in the data
   const statusList = [
@@ -23,6 +41,35 @@ const Dashboard: React.FC = () => {
   const monthlyCollection = bills.reduce((sum, bill) => sum + (bill.paymentStatus === 'paid' ? bill.totalAmount : 0), 0);
   const monthlyExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
   const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0;
+
+  // Fetch electricity stats
+  const fetchElectricityStats = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('electricity_stats_view')
+        .select('*')
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setElectricityStats({
+          totalUnits: data.total_units || 0,
+          totalAmount: data.total_amount || 0,
+          totalCollected: data.collected_amount || 0,
+          pendingAmount: data.pending_amount || 0,
+          currentMonthUnits: data.current_month_units || 0,
+          currentMonthAmount: data.current_month_amount || 0
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching electricity stats:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchElectricityStats();
+  }, []);
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -70,6 +117,18 @@ const Dashboard: React.FC = () => {
       value: formatCurrency(monthlyExpenses),
       icon: TrendingUp,
       color: 'bg-red-100 text-red-700',
+    },
+    {
+      label: 'Electricity Collected',
+      value: formatCurrency(electricityStats.totalCollected),
+      icon: Zap,
+      color: 'bg-orange-100 text-orange-700',
+    },
+    {
+      label: 'Electricity Pending',
+      value: formatCurrency(electricityStats.pendingAmount),
+      icon: Zap,
+      color: 'bg-pink-100 text-pink-700',
     },
     {
       label: 'Occupancy Rate',
@@ -191,6 +250,37 @@ const Dashboard: React.FC = () => {
 
         <div className="card">
           <div className="card-header">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Electricity Summary</h3>
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Total Units:</span>
+              <span className="font-semibold">{electricityStats.totalUnits}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Total Amount:</span>
+              <span className="font-semibold text-orange-600">{formatCurrency(electricityStats.totalAmount)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Collected:</span>
+              <span className="font-semibold text-green-600">{formatCurrency(electricityStats.totalCollected)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Pending:</span>
+              <span className="font-semibold text-red-600">{formatCurrency(electricityStats.pendingAmount)}</span>
+            </div>
+            <hr className="my-2" />
+            <div className="flex justify-between items-center">
+              <span className="text-gray-800 font-medium">Current Month:</span>
+              <span className="font-bold text-lg text-blue-600">
+                {formatCurrency(electricityStats.currentMonthAmount)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-header">
             <h3 className="text-lg font-semibold text-gray-800 mb-2">Occupancy Summary</h3>
           </div>
           <div className="space-y-3">
@@ -204,51 +294,16 @@ const Dashboard: React.FC = () => {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Vacant Rooms:</span>
-              <span className="font-semibold text-gray-600">{totalRooms - occupiedRooms}</span>
+              <span className="font-semibold text-red-600">{totalRooms - occupiedRooms}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Occupancy Rate:</span>
               <span className="font-semibold text-blue-600">{occupancyRate}%</span>
             </div>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="card-header">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">Tenant Summary</h3>
-          </div>
-          <div className="space-y-3">
+            <hr className="my-2" />
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Total Tenants:</span>
-              <span className="font-semibold">{tenants.length}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Active Tenants:</span>
-              <span className="font-semibold text-green-600">{activeTenants}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Paid Tenants:</span>
-              <span className="font-semibold text-blue-600">{statusCounts.paid}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Due Tenants:</span>
-              <span className="font-semibold text-red-600">{statusCounts.due}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Adjust Tenants:</span>
-              <span className="font-semibold text-yellow-600">{statusCounts.adjust}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Departing Tenants:</span>
-              <span className="font-semibold text-orange-600">{statusCounts.departing}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Left Tenants:</span>
-              <span className="font-semibold text-gray-600">{statusCounts.left}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Pending Tenants:</span>
-              <span className="font-semibold text-purple-600">{statusCounts.pending}</span>
+              <span className="text-gray-800 font-medium">Active Tenants:</span>
+              <span className="font-bold text-lg text-green-600">{activeTenants}</span>
             </div>
           </div>
         </div>
