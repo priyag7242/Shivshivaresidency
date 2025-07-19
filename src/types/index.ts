@@ -15,7 +15,7 @@ export interface Tenant {
   category?: 'new' | 'existing' | 'no_security';
   // New fields for departure tracking
   departureDate?: string;
-  stayDuration?: '1_month' | '2_months' | '3_months' | '6_months' | 'indefinite';
+  stayDuration?: '1' | '2' | '3' | 'unknown';
   noticeGiven?: boolean;
   noticeDate?: string;
   securityAdjustment?: number;

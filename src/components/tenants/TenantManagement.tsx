@@ -107,12 +107,18 @@ const TenantManagement: React.FC = () => {
       setSubmitting(false);
       return;
     }
-    if (form.stay_duration === '' || isNaN(Number(form.stay_duration)) || Number(form.stay_duration) <= 0) {
-      setFormError('Stay Duration must be a positive number.');
+    // Validate stay_duration: allow 1, 2, 3 months or "unknown"
+    if (form.stay_duration === '') {
+      setFormError('Stay Duration is required.');
       setSubmitting(false);
       return;
     }
-    const cleanNumber = (val: string) => val === '' ? null : Number(val);
+    if (form.stay_duration !== 'unknown' && (isNaN(Number(form.stay_duration)) || ![1, 2, 3].includes(Number(form.stay_duration)))) {
+      setFormError('Stay Duration must be 1, 2, 3 months, or "unknown" for longer stays.');
+      setSubmitting(false);
+      return;
+    }
+    const cleanNumber = (val: string) => val === '' ? null : val === 'unknown' ? 'unknown' : Number(val);
     const payload = {
       ...form,
       stay_duration: cleanNumber(form.stay_duration),
@@ -157,12 +163,18 @@ const TenantManagement: React.FC = () => {
       setSubmitting(false);
       return;
     }
-    if (form.stay_duration === '' || isNaN(Number(form.stay_duration)) || Number(form.stay_duration) <= 0) {
-      setFormError('Stay Duration must be a positive number.');
+    // Validate stay_duration: allow 1, 2, 3 months or "unknown"
+    if (form.stay_duration === '') {
+      setFormError('Stay Duration is required.');
       setSubmitting(false);
       return;
     }
-    const cleanNumber = (val: string) => val === '' ? null : Number(val);
+    if (form.stay_duration !== 'unknown' && (isNaN(Number(form.stay_duration)) || ![1, 2, 3].includes(Number(form.stay_duration)))) {
+      setFormError('Stay Duration must be 1, 2, 3 months, or "unknown" for longer stays.');
+      setSubmitting(false);
+      return;
+    }
+    const cleanNumber = (val: string) => val === '' ? null : val === 'unknown' ? 'unknown' : Number(val);
     const payload = {
       ...form,
       stay_duration: cleanNumber(form.stay_duration),
@@ -289,6 +301,13 @@ const TenantManagement: React.FC = () => {
                     const d = new Date(value);
                     value = `${d.getDate().toString().padStart(2, '0')}-${(d.getMonth()+1).toString().padStart(2, '0')}-${d.getFullYear()}`;
                   }
+                  if (col.key === 'stay_duration') {
+                    if (value === 'unknown') {
+                      value = 'Unknown';
+                    } else if (value && !isNaN(Number(value))) {
+                      value = `${value} month${Number(value) > 1 ? 's' : ''}`;
+                    }
+                  }
                   if (col.key === 'monthly_rent' || col.key === 'security_deposit') {
                     return <td key={col.key} className="px-3 py-2 text-right border-r border-gray-200 last:border-r-0">{value ?? ''}</td>;
                   }
@@ -339,6 +358,20 @@ const TenantManagement: React.FC = () => {
                             onChange={e => setForm({ ...form, [key]: e.target.checked })}
                             className="h-4 w-4"
                           />
+                        ) : key === 'stay_duration' ? (
+                          <select
+                            name={key}
+                            value={form[key] ?? ''}
+                            onChange={e => setForm({ ...form, [key]: e.target.value })}
+                            className="input"
+                            required
+                          >
+                            <option value="">Select Stay Duration</option>
+                            <option value="1">1 Month</option>
+                            <option value="2">2 Months</option>
+                            <option value="3">3 Months</option>
+                            <option value="unknown">Unknown (Longer Stay)</option>
+                          </select>
                         ) : (
                           <input
                             type={key.toLowerCase().includes('date') ? 'date' : (typeof initialForm[key] === 'number' ? 'number' : 'text')}
@@ -384,6 +417,20 @@ const TenantManagement: React.FC = () => {
                             onChange={e => setForm({ ...form, [key]: e.target.checked })}
                             className="h-4 w-4"
                           />
+                        ) : key === 'stay_duration' ? (
+                          <select
+                            name={key}
+                            value={form[key] ?? ''}
+                            onChange={e => setForm({ ...form, [key]: e.target.value })}
+                            className="input"
+                            required
+                          >
+                            <option value="">Select Stay Duration</option>
+                            <option value="1">1 Month</option>
+                            <option value="2">2 Months</option>
+                            <option value="3">3 Months</option>
+                            <option value="unknown">Unknown (Longer Stay)</option>
+                          </select>
                         ) : (
                           <input
                             type={key.toLowerCase().includes('date') ? 'date' : (typeof initialForm[key] === 'number' ? 'number' : 'text')}
@@ -421,8 +468,16 @@ const TenantManagement: React.FC = () => {
                     {group.fields.map(key => (
                       <div key={key} className="flex flex-col">
                         <span className="font-medium mb-1">{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-                        <span className="text-gray-700">{typeof showView[key] === 'boolean' ? showView[key]?.toString() : showView[key] ?? ''}</span>
-              </div>
+                        <span className="text-gray-700">
+                          {typeof showView[key] === 'boolean' ? showView[key]?.toString() : 
+                           key === 'stay_duration' ? 
+                             (showView[key] === 'unknown' ? 'Unknown' : 
+                              (showView[key] && !isNaN(Number(showView[key])) ? 
+                               `${showView[key]} month${Number(showView[key]) > 1 ? 's' : ''}` : 
+                               showView[key] ?? '')) :
+                           showView[key] ?? ''}
+                        </span>
+                      </div>
                     ))}
               </div>
               </div>

@@ -415,12 +415,12 @@ const BillingManagement: React.FC<BillingManagementProps> = ({
   };
 
   const keyTableFields = [
-    { key: 'tenant_id', label: 'Tenant' },
-    { key: 'billing_period', label: 'Period' },
-    { key: 'rent_amount', label: 'Rent' },
-    { key: 'electricity_charges', label: 'Electricity' },
-    { key: 'total_amount', label: 'Total' },
-    { key: 'payment_status', label: 'Status' },
+    { key: 'tenantId', label: 'Tenant' },
+    { key: 'billingPeriod', label: 'Period' },
+    { key: 'rentAmount', label: 'Rent' },
+    { key: 'electricityCharges', label: 'Electricity' },
+    { key: 'totalAmount', label: 'Total' },
+    { key: 'paymentStatus', label: 'Status' },
   ];
 
   const handleShareWhatsAppRow = (bill: Bill) => {
@@ -525,13 +525,13 @@ const BillingManagement: React.FC<BillingManagementProps> = ({
                 <tr key={bill.id} className="hover:bg-blue-50 border-b border-gray-200">
                   {keyTableFields.map(col => {
                     let value = (bill as any)[col.key];
-                    if (col.key === 'tenant_id') {
+                    if (col.key === 'tenantId') {
                       return <td key={col.key} className="px-3 py-2 whitespace-nowrap border-r border-gray-200 last:border-r-0">{tenant ? tenant.name : value}</td>;
                     }
-                    if (["rent_amount", "electricity_charges", "total_amount"].includes(col.key)) {
+                    if (["rentAmount", "electricityCharges", "totalAmount"].includes(col.key)) {
                       return <td key={col.key} className="px-3 py-2 text-right border-r border-gray-200 last:border-r-0">{formatCurrency(Number(value)) ?? ''}</td>;
                     }
-                    if (col.key === 'payment_status') {
+                    if (col.key === 'paymentStatus') {
                       return <td key={col.key} className="px-3 py-2 border-r border-gray-200 last:border-r-0"><span className={`px-2 py-1 rounded-full text-xs font-semibold ${value === 'paid' ? 'bg-green-100 text-green-700' : value === 'unpaid' ? 'bg-red-100 text-red-700' : value === 'partial' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'}`}>{value}</span></td>;
                     }
                     return <td key={col.key} className="px-3 py-2 whitespace-nowrap border-r border-gray-200 last:border-r-0">{value ?? ''}</td>;
