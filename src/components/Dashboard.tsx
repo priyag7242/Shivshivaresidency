@@ -1,23 +1,38 @@
 import React from 'react';
-import { Users, Building, DollarSign, TrendingUp, CheckCircle } from 'lucide-react';
+import { Users, Building, DollarSign, TrendingUp, CheckCircle, Shield, Home } from 'lucide-react';
 import { useData } from '../hooks/useData';
 
 const Dashboard: React.FC = () => {
   const { tenants, rooms, bills, expenses, loading, error } = useData();
 
-  // Calculate stats
+  // Calculate stats based on actual tenant statuses in the data
   const statusList = [
-    'active', 'departing', 'left', 'pending', 'terminated', 'inactive', 'hold', 'prospective'
+    'active', 'paid', 'due', 'adjust', 'departing', 'left', 'pending', 'terminated', 'inactive', 'hold', 'prospective'
   ];
+  
   const statusCounts = Object.fromEntries(
     statusList.map(status => [status, tenants.filter(t => t.status === status).length])
   );
+  
+  // Calculate financial totals
+  const totalRent = tenants.reduce((sum, tenant) => sum + tenant.monthlyRent, 0);
+  const totalSecurityDeposit = tenants.reduce((sum, tenant) => sum + tenant.securityDeposit, 0);
   const activeTenants = tenants.filter(t => t.status === 'active').length;
   const totalRooms = rooms.length;
   const occupiedRooms = rooms.filter(r => r.status === 'occupied').length;
   const monthlyCollection = bills.reduce((sum, bill) => sum + (bill.paymentStatus === 'paid' ? bill.totalAmount : 0), 0);
   const monthlyExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
   const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0;
+
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
 
   const statCards = [
     {
@@ -33,14 +48,26 @@ const Dashboard: React.FC = () => {
       color: 'bg-purple-100 text-purple-700',
     },
     {
-      label: 'Monthly Collection',
-      value: `₹${monthlyCollection.toLocaleString()}`,
+      label: 'Total Monthly Rent',
+      value: formatCurrency(totalRent),
       icon: DollarSign,
       color: 'bg-green-100 text-green-700',
     },
     {
+      label: 'Total Security Deposit',
+      value: formatCurrency(totalSecurityDeposit),
+      icon: Shield,
+      color: 'bg-yellow-100 text-yellow-700',
+    },
+    {
+      label: 'Monthly Collection',
+      value: formatCurrency(monthlyCollection),
+      icon: TrendingUp,
+      color: 'bg-emerald-100 text-emerald-700',
+    },
+    {
       label: 'Monthly Expenses',
-      value: `₹${monthlyExpenses.toLocaleString()}`,
+      value: formatCurrency(monthlyExpenses),
       icon: TrendingUp,
       color: 'bg-red-100 text-red-700',
     },
@@ -50,25 +77,71 @@ const Dashboard: React.FC = () => {
       icon: CheckCircle,
       color: 'bg-teal-100 text-teal-700',
     },
+    {
+      label: 'Total Tenants',
+      value: tenants.length,
+      icon: Home,
+      color: 'bg-indigo-100 text-indigo-700',
+    },
   ];
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'paid':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'due':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'adjust':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'departing':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'left':
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'pending':
+        return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'terminated':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'inactive':
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'hold':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'prospective':
+        return 'bg-indigo-100 text-indigo-800 border-indigo-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
 
   return (
     <div className="space-y-8 animate-fade-in">
       <div className="card">
         <div className="card-header">
           <h1 className="text-3xl font-bold text-neutral-900">Dashboard Overview</h1>
-          <p className="text-gray-600 mt-1">Welcome! Here’s what’s happening with your PG today.</p>
+          <p className="text-gray-600 mt-1">Welcome! Here's what's happening with your PG today.</p>
         </div>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-6">
-        {statusList.map(status => (
-          <div key={status} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col items-center">
-            <span className="text-2xl font-bold mb-1">{statusCounts[status]}</span>
-            <span className="text-xs text-gray-600 capitalize">{status}</span>
-          </div>
-        ))}
+      
+      {/* Tenant Status Distribution */}
+      <div className="card">
+        <div className="card-header">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Tenant Status Distribution</h2>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {statusList.map(status => (
+            <div key={status} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col items-center">
+              <span className="text-2xl font-bold mb-1">{statusCounts[status]}</span>
+              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getStatusColor(status)}`}>
+                {status.toUpperCase()}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      {/* Main Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((stat, idx) => {
           const Icon = stat.icon;
           return (
@@ -82,6 +155,105 @@ const Dashboard: React.FC = () => {
           );
         })}
       </div>
+
+      {/* Financial Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="card">
+          <div className="card-header">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Financial Summary</h3>
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Total Monthly Rent:</span>
+              <span className="font-semibold text-green-600">{formatCurrency(totalRent)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Total Security Deposit:</span>
+              <span className="font-semibold text-yellow-600">{formatCurrency(totalSecurityDeposit)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Monthly Collection:</span>
+              <span className="font-semibold text-blue-600">{formatCurrency(monthlyCollection)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Monthly Expenses:</span>
+              <span className="font-semibold text-red-600">{formatCurrency(monthlyExpenses)}</span>
+            </div>
+            <hr className="my-2" />
+            <div className="flex justify-between items-center">
+              <span className="text-gray-800 font-medium">Net Income:</span>
+              <span className="font-bold text-lg text-green-600">
+                {formatCurrency(monthlyCollection - monthlyExpenses)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-header">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Occupancy Summary</h3>
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Total Rooms:</span>
+              <span className="font-semibold">{totalRooms}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Occupied Rooms:</span>
+              <span className="font-semibold text-green-600">{occupiedRooms}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Vacant Rooms:</span>
+              <span className="font-semibold text-gray-600">{totalRooms - occupiedRooms}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Occupancy Rate:</span>
+              <span className="font-semibold text-blue-600">{occupancyRate}%</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-header">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Tenant Summary</h3>
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Total Tenants:</span>
+              <span className="font-semibold">{tenants.length}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Active Tenants:</span>
+              <span className="font-semibold text-green-600">{activeTenants}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Paid Tenants:</span>
+              <span className="font-semibold text-blue-600">{statusCounts.paid}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Due Tenants:</span>
+              <span className="font-semibold text-red-600">{statusCounts.due}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Adjust Tenants:</span>
+              <span className="font-semibold text-yellow-600">{statusCounts.adjust}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Departing Tenants:</span>
+              <span className="font-semibold text-orange-600">{statusCounts.departing}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Left Tenants:</span>
+              <span className="font-semibold text-gray-600">{statusCounts.left}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Pending Tenants:</span>
+              <span className="font-semibold text-purple-600">{statusCounts.pending}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {loading && <div>Loading...</div>}
       {error && <div className="text-red-600">{error}</div>}
     </div>

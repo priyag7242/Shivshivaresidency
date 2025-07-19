@@ -1,7 +1,8 @@
-import React, { useState, useRef } from 'react';
-import { Building, Plus, Loader2, Wrench, Users, BedDouble, BedSingle, Edit, Trash2, Eye } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Building, Plus, Loader2, Users, BedSingle, Edit, Trash2, Eye } from 'lucide-react';
 import { useData } from '../../hooks/useData';
 import { Room } from '../../types';
+import { supabase } from '../../lib/supabase';
 
 interface RoomManagementProps {
   rooms: Room[];
@@ -10,9 +11,25 @@ interface RoomManagementProps {
   loading: boolean;
 }
 
+interface RoomWithTenants {
+  room_number: string;
+  floor: number;
+  room_type: string;
+  capacity: number;
+  rent_amount: number;
+  status: string;
+  tenants: any[];
+  total_rent: number;
+  total_deposit: number;
+  active_tenants: number;
+}
+
 const RoomManagement: React.FC<RoomManagementProps> = ({ rooms, onUpdateRoom, onAddRoom, loading }) => {
   const { tenants, deleteRoom, error } = useData();
   const [showAdd, setShowAdd] = useState(false);
+  const [roomData, setRoomData] = useState<RoomWithTenants[]>([]);
+  const [roomLoading, setRoomLoading] = useState(true);
+  
   // Change form state to Record<string, any>
   const [form, setForm] = useState<Record<string, any>>({
     roomNumber: '',
@@ -29,26 +46,125 @@ const RoomManagement: React.FC<RoomManagementProps> = ({ rooms, onUpdateRoom, on
   const [selectedRoom, setSelectedRoom] = useState<any>(null);
   const [editForm, setEditForm] = useState<Record<string, any>>({});
 
-  // Dashboard stats
-  const totalRooms = rooms.length;
-  const occupiedRooms = rooms.filter(r => r.status === 'occupied').length;
-  const vacantRooms = rooms.filter(r => r.status === 'vacant').length;
-  const maintenanceRooms = rooms.filter(r => r.status === 'maintenance').length;
-  const singleRooms = rooms.filter(r => r.roomType === 'single').length;
-  const doubleRooms = rooms.filter(r => r.roomType === 'double').length;
-  const tripleRooms = rooms.filter(r => r.roomType === 'triple').length;
-  const quadRooms = rooms.filter(r => r.roomType === 'quad').length;
-  const totalCapacity = rooms.reduce((sum, r) => sum + (r.capacity || 1), 0);
-  const usedCapacity = rooms.filter(r => r.status === 'occupied').reduce((sum, r) => sum + (r.capacity || 1), 0);
-  const capacityUtilization = totalCapacity > 0 ? Math.round((usedCapacity / totalCapacity) * 100) : 0;
+  // Fetch room data with tenant information
+  const fetchRoomData = async () => {
+    setRoomLoading(true);
+    try {
+      // Get all unique room numbers from tenants
+      const { data: tenantData, error: tenantError } = await supabase
+        .from('tenants')
+        .select('*')
+        .order('room_number');
+
+      if (tenantError) throw tenantError;
+
+      // If no tenants found, create sample room data
+      if (!tenantData || tenantData.length === 0) {
+        const sampleRooms: RoomWithTenants[] = [
+          {
+            room_number: '101',
+            floor: 1,
+            room_type: 'single',
+            capacity: 1,
+            rent_amount: 8000,
+            status: 'vacant',
+            tenants: [],
+            total_rent: 0,
+            total_deposit: 0,
+            active_tenants: 0
+          },
+          {
+            room_number: '102',
+            floor: 1,
+            room_type: 'double',
+            capacity: 2,
+            rent_amount: 12000,
+            status: 'vacant',
+            tenants: [],
+            total_rent: 0,
+            total_deposit: 0,
+            active_tenants: 0
+          },
+          {
+            room_number: '201',
+            floor: 2,
+            room_type: 'single',
+            capacity: 1,
+            rent_amount: 8500,
+            status: 'vacant',
+            tenants: [],
+            total_rent: 0,
+            total_deposit: 0,
+            active_tenants: 0
+          }
+        ];
+        setRoomData(sampleRooms);
+        setRoomLoading(false);
+        return;
+      }
+
+      // Group tenants by room number
+      const roomGroups = tenantData.reduce((acc: any, tenant: any) => {
+        const roomNumber = tenant.room_number;
+        if (!acc[roomNumber]) {
+          acc[roomNumber] = {
+            room_number: roomNumber,
+            floor: parseInt(roomNumber.charAt(0)) || 1,
+            room_type: 'single', // Default, can be enhanced
+            capacity: 1, // Default, can be enhanced
+            rent_amount: 0,
+            status: 'vacant',
+            tenants: [],
+            total_rent: 0,
+            total_deposit: 0,
+            active_tenants: 0
+          };
+        }
+        
+        acc[roomNumber].tenants.push(tenant);
+        acc[roomNumber].total_rent += tenant.monthly_rent || 0;
+        acc[roomNumber].total_deposit += tenant.security_deposit || 0;
+        
+        if (tenant.status === 'active') {
+          acc[roomNumber].active_tenants++;
+          acc[roomNumber].status = 'occupied';
+        }
+        
+        return acc;
+      }, {});
+
+      // Convert to array and sort
+      const roomArray = Object.values(roomGroups).sort((a: any, b: any) => 
+        a.room_number.localeCompare(b.room_number, undefined, { numeric: true })
+      ) as RoomWithTenants[];
+
+      setRoomData(roomArray);
+    } catch (error) {
+      console.error('Error fetching room data:', error);
+    } finally {
+      setRoomLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRoomData();
+  }, [tenants]);
+
+  // Dashboard stats based on actual tenant data
+  const totalRooms = roomData.length;
+  const occupiedRooms = roomData.filter(r => r.status === 'occupied').length;
+  const vacantRooms = roomData.filter(r => r.status === 'vacant').length;
+  const totalRent = roomData.reduce((sum, r) => sum + r.total_rent, 0);
+  const totalDeposit = roomData.reduce((sum, r) => sum + r.total_deposit, 0);
+  const totalActiveTenants = roomData.reduce((sum, r) => sum + r.active_tenants, 0);
 
   // Group rooms by floor
-  const roomsByFloor = rooms.reduce((acc, room) => {
+  const roomsByFloor = roomData.reduce((acc, room) => {
     const floor = room.floor || 0;
     if (!acc[floor]) acc[floor] = [];
     acc[floor].push(room);
     return acc;
-  }, {} as Record<number, typeof rooms>);
+  }, {} as Record<number, typeof roomData>);
   const sortedFloors = Object.keys(roomsByFloor).map(Number).sort((a, b) => a - b);
 
   // Collapsible floors state
@@ -97,6 +213,7 @@ const RoomManagement: React.FC<RoomManagementProps> = ({ rooms, onUpdateRoom, on
       });
       setForm({ roomNumber: '', roomType: 'single', floor: 1, capacity: 1, rentAmount: 0, status: 'vacant' });
       setShowAdd(false);
+      fetchRoomData(); // Refresh data
     } catch (err: any) {
       setFormError(err.message || 'Failed to add room');
     } finally {
@@ -128,6 +245,7 @@ const RoomManagement: React.FC<RoomManagementProps> = ({ rooms, onUpdateRoom, on
       await onUpdateRoom(selectedRoom.id, editForm);
       setShowEditModal(false);
       setSelectedRoom(null);
+      fetchRoomData(); // Refresh data
     } catch (err: any) {
       setFormError(err.message || 'Failed to update room');
     } finally {
@@ -137,23 +255,29 @@ const RoomManagement: React.FC<RoomManagementProps> = ({ rooms, onUpdateRoom, on
   const handleDelete = async (id: string) => {
     if (window.confirm('Delete this room?')) {
       await deleteRoom(id);
+      fetchRoomData(); // Refresh data
     }
   };
 
   const keyTableFields = [
-    { key: 'roomNumber', label: 'Room' },
-    { key: 'tenant', label: 'Tenant' },
+    { key: 'room_number', label: 'Room' },
+    { key: 'tenants', label: 'Tenants' },
     { key: 'floor', label: 'Floor' },
-    { key: 'roomType', label: 'Type' },
-    { key: 'rentAmount', label: 'Rent' },
+    { key: 'total_rent', label: 'Total Rent' },
+    { key: 'total_deposit', label: 'Total Deposit' },
     { key: 'status', label: 'Status' },
   ];
 
-  // Define field groups for modals
-  const groupFields = [
-    { label: 'Room Info', fields: ['roomNumber', 'roomType', 'floor', 'capacity', 'rentAmount'] },
-    { label: 'Status', fields: ['status'] },
-  ];
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    if (!amount || amount === 0) return '₹0';
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
 
   return (
     <div className="space-y-6">
@@ -181,67 +305,42 @@ const RoomManagement: React.FC<RoomManagementProps> = ({ rooms, onUpdateRoom, on
           </div>
         </div>
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex items-center">
-          <Wrench className="h-8 w-8 text-red-600 mr-4" />
+          <Users className="h-8 w-8 text-purple-600 mr-4" />
           <div>
-            <div className="text-2xl font-bold">{maintenanceRooms}</div>
-            <div className="text-sm text-gray-600">Under Maintenance</div>
+            <div className="text-2xl font-bold">{totalActiveTenants}</div>
+            <div className="text-sm text-gray-600">Active Tenants</div>
           </div>
         </div>
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex items-center">
-          <BedSingle className="h-8 w-8 text-blue-400 mr-4" />
+          <Building className="h-8 w-8 text-green-600 mr-4" />
           <div>
-            <div className="text-2xl font-bold">{singleRooms}</div>
-            <div className="text-sm text-gray-600">Single Rooms</div>
+            <div className="text-2xl font-bold">{formatCurrency(totalRent)}</div>
+            <div className="text-sm text-gray-600">Total Monthly Rent</div>
           </div>
         </div>
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex items-center">
-          <BedDouble className="h-8 w-8 text-green-400 mr-4" />
+          <Building className="h-8 w-8 text-yellow-600 mr-4" />
           <div>
-            <div className="text-2xl font-bold">{doubleRooms}</div>
-            <div className="text-sm text-gray-600">Double Rooms</div>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex items-center">
-          <BedDouble className="h-8 w-8 text-yellow-400 mr-4" />
-          <div>
-            <div className="text-2xl font-bold">{tripleRooms}</div>
-            <div className="text-sm text-gray-600">Triple Rooms</div>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex items-center">
-          <BedDouble className="h-8 w-8 text-purple-400 mr-4" />
-          <div>
-            <div className="text-2xl font-bold">{quadRooms}</div>
-            <div className="text-sm text-gray-600">Quad Rooms</div>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex items-center">
-          <Users className="h-8 w-8 text-indigo-600 mr-4" />
-          <div>
-            <div className="text-2xl font-bold">{totalCapacity}</div>
-            <div className="text-sm text-gray-600">Total Capacity</div>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex items-center">
-          <Users className="h-8 w-8 text-pink-600 mr-4" />
-          <div>
-            <div className="text-2xl font-bold">{usedCapacity}</div>
-            <div className="text-sm text-gray-600">Used Capacity</div>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex items-center">
-          <Users className="h-8 w-8 text-cyan-600 mr-4" />
-          <div>
-            <div className="text-2xl font-bold">{capacityUtilization}%</div>
-            <div className="text-sm text-gray-600">Capacity Utilization</div>
+            <div className="text-2xl font-bold">{formatCurrency(totalDeposit)}</div>
+            <div className="text-sm text-gray-600">Total Security Deposit</div>
           </div>
         </div>
       </div>
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-3xl font-bold text-neutral-900">Rooms</h1>
-        <button className="btn-primary flex items-center" onClick={() => setShowAdd(true)}>
-          <Plus className="h-4 w-4 mr-2" /> Add Room
-        </button>
+        <div className="flex gap-2">
+          <button 
+            className="btn-secondary flex items-center" 
+            onClick={fetchRoomData}
+            disabled={roomLoading}
+          >
+            <Loader2 className={`h-4 w-4 mr-2 ${roomLoading ? 'animate-spin' : ''}`} />
+            {roomLoading ? 'Loading...' : 'Refresh'}
+          </button>
+          <button className="btn-primary flex items-center" onClick={() => setShowAdd(true)}>
+            <Plus className="h-4 w-4 mr-2" /> Add Room
+          </button>
+        </div>
       </div>
       {/* Floor Navigation Bar */}
       <div className="flex flex-wrap gap-2 mb-4 sticky top-0 z-20 bg-gray-50 py-2 px-2 rounded shadow">
@@ -259,14 +358,35 @@ const RoomManagement: React.FC<RoomManagementProps> = ({ rooms, onUpdateRoom, on
       <div className="card">
         <div className="card-header flex items-center justify-between">
           <h2 className="text-lg font-semibold">Room List</h2>
+          <div className="text-sm text-gray-500">
+            {roomLoading ? 'Loading...' : `${roomData.length} rooms found`}
+          </div>
         </div>
         <div className="card-body overflow-x-auto">
-          {loading ? (
+          
+          {roomLoading ? (
             <div className="flex items-center space-x-2"><Loader2 className="animate-spin" /> Loading...</div>
           ) : error ? (
             <div className="text-red-600">{error}</div>
-          ) : rooms.length === 0 ? (
-            <div className="text-gray-500">No rooms found.</div>
+          ) : roomData.length === 0 ? (
+            <div className="text-gray-500">
+              <p>No rooms found.</p>
+              <p className="text-sm mt-2">This could mean:</p>
+              <ul className="text-sm mt-1 list-disc list-inside">
+                <li>No tenants have been added to the database yet</li>
+                <li>The SQL commands haven't been executed in Supabase</li>
+                <li>There's a connection issue with the database</li>
+              </ul>
+              <button 
+                className="mt-3 btn-secondary text-sm"
+                onClick={() => {
+                  console.log('Manual refresh triggered');
+                  fetchRoomData();
+                }}
+              >
+                Try Again
+              </button>
+            </div>
           ) : (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 md:p-6 overflow-x-auto">
               <table className="min-w-full border border-gray-200 text-xs">
@@ -295,71 +415,53 @@ const RoomManagement: React.FC<RoomManagementProps> = ({ rooms, onUpdateRoom, on
                       </tr>
                     ];
                     if (!collapsedFloors[floor]) {
-                      rows.push(...roomsByFloor[floor].map((room, idx) => {
-                        const tenant = tenants.find(t => t.id === room.tenantId);
-                        return (
-                          <tr key={room.id} className={`hover:bg-blue-50 border-b border-gray-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                            {keyTableFields.map(col => {
-                              if (col.key === 'tenant') {
-                                if (room.status === 'vacant') {
-                                  return <td key={col.key} className="px-3 py-2 whitespace-nowrap border-r border-gray-200 last:border-r-0">Vacant</td>;
-                                } else if (room.status === 'occupied') {
-                                  return <td key={col.key} className="px-3 py-2 whitespace-nowrap border-r border-gray-200 last:border-r-0">{tenant ? tenant.name : 'Unassigned'}</td>;
-                                } else if (room.status === 'maintenance') {
-                                  return <td key={col.key} className="px-3 py-2 whitespace-nowrap border-r border-gray-200 last:border-r-0">—</td>;
-                                } else {
-                                  return <td key={col.key} className="px-3 py-2 whitespace-nowrap border-r border-gray-200 last:border-r-0">—</td>;
-                                }
+                      rows.push(...roomsByFloor[floor].map((room, idx) => (
+                        <tr key={room.room_number} className={`hover:bg-blue-50 border-b border-gray-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                          {keyTableFields.map(col => {
+                            if (col.key === 'tenants') {
+                              if (room.tenants.length === 0) {
+                                return <td key={col.key} className="px-3 py-2 whitespace-nowrap border-r border-gray-200 last:border-r-0 text-gray-500">Vacant</td>;
+                              } else {
+                                const tenantNames = room.tenants.map((t: any) => t.name).join(', ');
+                                return <td key={col.key} className="px-3 py-2 whitespace-nowrap border-r border-gray-200 last:border-r-0" title={tenantNames}>
+                                  {room.tenants.length} tenant{room.tenants.length > 1 ? 's' : ''}
+                                </td>;
                               }
-                              let value = (room as any)[col.key];
-                              if (col.key === 'rentAmount') {
-                                return <td key={col.key} className="px-3 py-2 text-right border-r border-gray-200 last:border-r-0">{value ?? ''}</td>;
-                              }
-                              if (col.key === 'status') {
-                                return (
-                                  <td key={col.key} className="px-3 py-2 border-r border-gray-200 last:border-r-0">
-                                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                                      value === 'vacant'
-                                        ? 'bg-yellow-100 text-yellow-700'
-                                        : value === 'occupied'
-                                        ? 'bg-green-100 text-green-700'
-                                        : value === 'maintenance'
-                                        ? 'bg-red-100 text-red-700'
-                                        : 'bg-gray-100 text-gray-700'
-                                    }`}>
-                                      {value}
-                                    </span>
-                                  </td>
-                                );
-                              }
-                              return <td key={col.key} className="px-3 py-2 border-r border-gray-200 last:border-r-0">{value ?? ''}</td>;
-                            })}
-                            <td className="px-3 py-2 border-r border-gray-200 last:border-r-0">
-                              <button
-                                onClick={() => handleEdit(room)}
-                                className="text-blue-600 hover:text-blue-900 mr-2"
-                                title="Edit Room"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </button>
-                              <button
-                                onClick={() => handleView(room)}
-                                className="text-gray-600 hover:text-gray-900"
-                                title="View Room"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(room.id)}
-                                className="text-red-600 hover:text-red-900 ml-2"
-                                title="Delete Room"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      }));
+                            }
+                            if (col.key === 'total_rent') {
+                              return <td key={col.key} className="px-3 py-2 text-right border-r border-gray-200 last:border-r-0 font-medium">{formatCurrency(room.total_rent)}</td>;
+                            }
+                            if (col.key === 'total_deposit') {
+                              return <td key={col.key} className="px-3 py-2 text-right border-r border-gray-200 last:border-r-0 font-medium">{formatCurrency(room.total_deposit)}</td>;
+                            }
+                            if (col.key === 'status') {
+                              return (
+                                <td key={col.key} className="px-3 py-2 border-r border-gray-200 last:border-r-0">
+                                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                    room.status === 'vacant'
+                                      ? 'bg-yellow-100 text-yellow-700'
+                                      : room.status === 'occupied'
+                                      ? 'bg-green-100 text-green-700'
+                                      : 'bg-gray-100 text-gray-700'
+                                  }`}>
+                                    {room.status}
+                                  </span>
+                                </td>
+                              );
+                            }
+                                                         return <td key={col.key} className="px-3 py-2 border-r border-gray-200 last:border-r-0">{(room as any)[col.key] ?? ''}</td>;
+                          })}
+                          <td className="px-3 py-2 border-r border-gray-200 last:border-r-0">
+                            <button
+                              onClick={() => handleView(room)}
+                              className="text-gray-600 hover:text-gray-900 mr-2"
+                              title="View Room Details"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      )));
                     }
                     return rows;
                   })}
@@ -468,128 +570,66 @@ const RoomManagement: React.FC<RoomManagementProps> = ({ rooms, onUpdateRoom, on
         </div>
       )}
 
-      {/* Edit Room Modal */}
-      {showEditModal && selectedRoom && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-            <h2 className="text-2xl font-bold mb-4">Edit Room: {selectedRoom.roomNumber}</h2>
-            <form onSubmit={handleEditSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="editRoomNumber" className="block text-sm font-medium text-gray-700">Room Number</label>
-                <input
-                  type="text"
-                  id="editRoomNumber"
-                  name="roomNumber"
-                  value={editForm.roomNumber}
-                  onChange={handleEditChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="editRoomType" className="block text-sm font-medium text-gray-700">Room Type</label>
-                <select
-                  id="editRoomType"
-                  name="roomType"
-                  value={editForm.roomType}
-                  onChange={handleEditChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                  required
-                >
-                  <option value="single">Single</option>
-                  <option value="double">Double</option>
-                  <option value="triple">Triple</option>
-                  <option value="quad">Quad</option>
-                </select>
-              </div>
-              <div>
-                <label htmlFor="editFloor" className="block text-sm font-medium text-gray-700">Floor</label>
-                <input
-                  type="number"
-                  id="editFloor"
-                  name="floor"
-                  value={editForm.floor}
-                  onChange={handleEditChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="editCapacity" className="block text-sm font-medium text-gray-700">Capacity</label>
-                <input
-                  type="number"
-                  id="editCapacity"
-                  name="capacity"
-                  value={editForm.capacity}
-                  onChange={handleEditChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="editRentAmount" className="block text-sm font-medium text-gray-700">Rent Amount</label>
-                <input
-                  type="number"
-                  id="editRentAmount"
-                  name="rentAmount"
-                  value={editForm.rentAmount}
-                  onChange={handleEditChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="editStatus" className="block text-sm font-medium text-gray-700">Status</label>
-                <select
-                  id="editStatus"
-                  name="status"
-                  value={editForm.status}
-                  onChange={handleEditChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                  required
-                >
-                  <option value="vacant">Vacant</option>
-                  <option value="occupied">Occupied</option>
-                  <option value="maintenance">Under Maintenance</option>
-                </select>
-              </div>
-              {formError && <div className="text-red-600">{formError}</div>}
-              <div className="flex justify-end space-x-2">
-                <button type="button" onClick={() => setShowEditModal(false)} className="btn-secondary">Cancel</button>
-                <button type="submit" className="btn-primary" disabled={submitting}>
-                  {submitting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
-                  {submitting ? 'Updating...' : 'Update Room'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* View Room Modal */}
+      {/* View Room Modal with Tenant Details */}
       {showViewModal && selectedRoom && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-            <h2 className="text-2xl font-bold mb-4">View Room: {selectedRoom.roomNumber}</h2>
-            <div className="grid grid-cols-2 gap-4">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold mb-4">Room Details: {selectedRoom.room_number}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <p><span className="font-semibold">Room Number:</span> {selectedRoom.roomNumber}</p>
-                <p><span className="font-semibold">Room Type:</span> {selectedRoom.roomType}</p>
-                <p><span className="font-semibold">Floor:</span> {selectedRoom.floor}</p>
-                <p><span className="font-semibold">Capacity:</span> {selectedRoom.capacity}</p>
-                <p><span className="font-semibold">Rent Amount:</span> {selectedRoom.rentAmount}</p>
-                <p><span className="font-semibold">Status:</span> {selectedRoom.status}</p>
+                <h3 className="text-lg font-semibold mb-3">Room Information</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="font-medium">Room Number:</span>
+                    <span>{selectedRoom.room_number}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">Floor:</span>
+                    <span>{selectedRoom.floor}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">Status:</span>
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                      selectedRoom.status === 'vacant' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'
+                    }`}>{selectedRoom.status}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">Total Rent:</span>
+                    <span className="font-semibold">{formatCurrency(selectedRoom.total_rent)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">Total Deposit:</span>
+                    <span className="font-semibold">{formatCurrency(selectedRoom.total_deposit)}</span>
+                  </div>
+                </div>
               </div>
               <div>
-                <p><span className="font-semibold">Tenant:</span> {selectedRoom.tenant ? selectedRoom.tenant.name : 'Unassigned'}</p>
-                <p><span className="font-semibold">Assigned Since:</span> {selectedRoom.assignedSince ? new Date(selectedRoom.assignedSince).toLocaleDateString() : 'N/A'}</p>
-                <p><span className="font-semibold">Lease Duration:</span> {selectedRoom.leaseDuration ? `${selectedRoom.leaseDuration} months` : 'N/A'}</p>
-                <p><span className="font-semibold">Monthly Rent:</span> {selectedRoom.monthlyRent}</p>
-                <p><span className="font-semibold">Deposit:</span> {selectedRoom.deposit}</p>
-                <p><span className="font-semibold">Utilities:</span> {selectedRoom.utilities}</p>
+                <h3 className="text-lg font-semibold mb-3">Tenants ({selectedRoom.tenants.length})</h3>
+                {selectedRoom.tenants.length === 0 ? (
+                  <p className="text-gray-500">No tenants assigned to this room.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {selectedRoom.tenants.map((tenant: any, index: number) => (
+                      <div key={tenant.id} className="border border-gray-200 rounded-lg p-3">
+                        <div className="font-medium">{tenant.name}</div>
+                        <div className="text-sm text-gray-600">Mobile: {tenant.mobile}</div>
+                        <div className="text-sm text-gray-600">Rent: {formatCurrency(tenant.monthly_rent)}</div>
+                        <div className="text-sm text-gray-600">Deposit: {formatCurrency(tenant.security_deposit)}</div>
+                        <div className="text-sm text-gray-600">Status: 
+                          <span className={`ml-1 px-2 py-1 rounded-full text-xs font-semibold ${
+                            tenant.status === 'active' ? 'bg-green-100 text-green-700' :
+                            tenant.status === 'paid' ? 'bg-blue-100 text-blue-700' :
+                            tenant.status === 'due' ? 'bg-red-100 text-red-700' :
+                            'bg-gray-100 text-gray-700'
+                          }`}>{tenant.status}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
-            <div className="mt-6 flex justify-end">
+            <div className="flex justify-end mt-6">
               <button type="button" onClick={() => setShowViewModal(false)} className="btn-secondary">Close</button>
             </div>
           </div>

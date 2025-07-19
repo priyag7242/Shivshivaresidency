@@ -27,8 +27,8 @@ const initialForm: Record<string, any> = {
   security_adjustment: '',
 };
 
+// Updated table fields to match your requirements
 const keyTableFields = [
-  { key: 'room_number', label: 'Room' },
   { key: 'name', label: 'Name' },
   { key: 'mobile', label: 'Mobile' },
   { key: 'joining_date', label: 'Joining Date' },
@@ -56,9 +56,6 @@ const TenantManagement: React.FC = () => {
   const [formError, setFormError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
-  const statusList = [
-    'all', 'active', 'departing', 'left', 'pending', 'terminated', 'inactive', 'hold', 'prospective'
-  ];
   const [statusFilter, setStatusFilter] = useState('all');
 
   // Fetch tenants from Supabase
@@ -216,21 +213,38 @@ const TenantManagement: React.FC = () => {
     )
   );
 
-  // Calculate status counts
+  // Calculate status counts and only show statuses that have tenants
+  const allStatuses = ['all', 'active', 'paid', 'due', 'adjust', 'departing', 'left', 'pending', 'terminated', 'inactive', 'hold', 'prospective'];
   const statusCounts = Object.fromEntries(
-    statusList.map(status => [
+    allStatuses.map(status => [
       status,
       status === 'all' ? tenants.length : tenants.filter(t => t.status === status).length
     ])
   );
 
+  // Only show status filters that have tenants (count > 0) or 'all'
+  const availableStatuses = allStatuses.filter(status => 
+    status === 'all' || statusCounts[status] > 0
+  );
+
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    if (!amount || amount === 0) return '₹0';
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
   return (
     <div className="space-y-6">
-      {/* Dashboard Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-6">
-        {Object.entries(statusCounts).map(([status, count]) => (
+      {/* Dashboard Cards - Only show statuses with tenants */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
+        {availableStatuses.map(status => (
           <div key={status} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col items-center">
-            <span className="text-2xl font-bold mb-1">{count}</span>
+            <span className="text-2xl font-bold mb-1">{statusCounts[status]}</span>
             <span className="text-xs text-gray-600 capitalize">{status}</span>
           </div>
         ))}
@@ -250,11 +264,11 @@ const TenantManagement: React.FC = () => {
             </button>
       </div>
 
-      {/* Status Filter Tabs and Dropdown */}
+      {/* Status Filter Tabs - Only show available statuses */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
         {/* Tabs */}
         <div className="flex flex-wrap gap-2">
-          {statusList.map(status => (
+          {availableStatuses.map(status => (
             <button
               key={status}
               className={`px-3 py-1 rounded-full border text-xs font-semibold capitalize transition-colors ${statusFilter === status ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50'}`}
@@ -270,7 +284,7 @@ const TenantManagement: React.FC = () => {
           onChange={e => setStatusFilter(e.target.value)}
           className="input ml-2"
         >
-          {statusList.map(status => (
+          {availableStatuses.map(status => (
             <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
           ))}
         </select>
@@ -301,19 +315,15 @@ const TenantManagement: React.FC = () => {
                     const d = new Date(value);
                     value = `${d.getDate().toString().padStart(2, '0')}-${(d.getMonth()+1).toString().padStart(2, '0')}-${d.getFullYear()}`;
                   }
-                  if (col.key === 'stay_duration') {
-                    if (value === 'unknown') {
-                      value = 'Unknown';
-                    } else if (value && !isNaN(Number(value))) {
-                      value = `${value} month${Number(value) > 1 ? 's' : ''}`;
-                    }
-                  }
                   if (col.key === 'monthly_rent' || col.key === 'security_deposit') {
-                    return <td key={col.key} className="px-3 py-2 text-right border-r border-gray-200 last:border-r-0">{value ?? ''}</td>;
+                    return <td key={col.key} className="px-3 py-2 text-right border-r border-gray-200 last:border-r-0">{formatCurrency(value || 0)}</td>;
                   }
                   if (col.key === 'status') {
                     return <td key={col.key} className="px-3 py-2 border-r border-gray-200 last:border-r-0"><span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                       value === 'active' ? 'bg-green-100 text-green-700' :
+                      value === 'paid' ? 'bg-blue-100 text-blue-700' :
+                      value === 'due' ? 'bg-red-100 text-red-700' :
+                      value === 'adjust' ? 'bg-yellow-100 text-yellow-700' :
                       value === 'departing' ? 'bg-orange-100 text-orange-700' :
                       value === 'left' ? 'bg-gray-200 text-gray-700' :
                       value === 'pending' ? 'bg-blue-100 text-blue-700' :
@@ -370,7 +380,13 @@ const TenantManagement: React.FC = () => {
                             <option value="1">1 Month</option>
                             <option value="2">2 Months</option>
                             <option value="3">3 Months</option>
+                            <option value="6">6 Months</option>
                             <option value="unknown">Unknown (Longer Stay)</option>
+                            <option value="1_month">1 Month (Legacy)</option>
+                            <option value="2_months">2 Months (Legacy)</option>
+                            <option value="3_months">3 Months (Legacy)</option>
+                            <option value="6_months">6 Months (Legacy)</option>
+                            <option value="indefinite">Indefinite</option>
                           </select>
                         ) : (
                           <input
@@ -429,7 +445,13 @@ const TenantManagement: React.FC = () => {
                             <option value="1">1 Month</option>
                             <option value="2">2 Months</option>
                             <option value="3">3 Months</option>
+                            <option value="6">6 Months</option>
                             <option value="unknown">Unknown (Longer Stay)</option>
+                            <option value="1_month">1 Month (Legacy)</option>
+                            <option value="2_months">2 Months (Legacy)</option>
+                            <option value="3_months">3 Months (Legacy)</option>
+                            <option value="6_months">6 Months (Legacy)</option>
+                            <option value="indefinite">Indefinite</option>
                           </select>
                         ) : (
                           <input

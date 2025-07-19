@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import RoomManagement from './components/rooms/RoomManagement';
+import RoomStatusView from './components/rooms/RoomStatusView';
 import TenantManagement from './components/tenants/TenantManagement';
 import BillingManagement from './components/billing/BillingManagement';
 import PaymentManagement from './components/payments/PaymentManagement';
@@ -134,6 +135,8 @@ function App() {
             loading={dataLoading}
           />
         );
+      case 'room-status':
+        return <RoomStatusView />;
       case 'tenants':
         return <TenantManagement />;
       case 'billing':
