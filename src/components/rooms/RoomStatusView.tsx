@@ -19,6 +19,9 @@ interface RoomStatus {
   total_rent: number;
   total_deposit: number;
   room_status: string;
+  roomType: 'single' | 'double' | 'triple' | 'quad'; // added
+  floor: number; // added
+  capacity: number; // added
 }
 
 interface VacantRoom {
@@ -34,6 +37,8 @@ const RoomStatusView: React.FC = () => {
   const [vacantRooms, setVacantRooms] = useState<VacantRoom[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'occupied' | 'vacant'>('occupied');
+  const [roomTypeModal, setRoomTypeModal] = useState<string | null>(null);
+  const [editedRoomTypes, setEditedRoomTypes] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetchRoomData();
@@ -108,6 +113,32 @@ const RoomStatusView: React.FC = () => {
     }).format(amount);
   };
 
+  const handleRoomTypeChange = (room: RoomStatus, newType: string) => {
+    setEditedRoomTypes(prev => ({ ...prev, [room.room_number]: newType }));
+  };
+
+  const saveRoomType = async (room: RoomStatus) => {
+    const newType = editedRoomTypes[room.room_number] || room.roomType;
+    if (newType === room.roomType) return;
+    // Update in Supabase
+    const { error } = await supabase
+      .from('rooms')
+      .update({ roomType: newType })
+      .eq('roomNumber', room.room_number);
+    if (!error) {
+      setRoomStatuses(prev => prev.map(r =>
+        r.room_number === room.room_number ? { ...r, roomType: newType as RoomStatus['roomType'] } : r
+      ));
+      setEditedRoomTypes(prev => {
+        const copy = { ...prev };
+        delete copy[room.room_number];
+        return copy;
+      });
+    } else {
+      alert('Failed to update room type');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -145,6 +176,85 @@ const RoomStatusView: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Add at the top of the return (after loading check, before tab navigation) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-blue-600 text-white rounded-xl p-6 flex flex-col items-center shadow hover:scale-105 transition-transform">
+          <span className="text-4xl font-bold">{roomStatuses.length + vacantRooms.length}</span>
+          <span className="mt-2 text-lg font-medium">Total Rooms</span>
+        </div>
+        <div onClick={() => setActiveTab('occupied')} className="cursor-pointer bg-green-600 text-white rounded-xl p-6 flex flex-col items-center shadow hover:scale-105 transition-transform">
+          <span className="text-4xl font-bold">{roomStatuses.filter(r => r.room_status !== 'VACANT').length}</span>
+          <span className="mt-2 text-lg font-medium">Occupied</span>
+        </div>
+        <div onClick={() => setActiveTab('vacant')} className="cursor-pointer bg-gray-600 text-white rounded-xl p-6 flex flex-col items-center shadow hover:scale-105 transition-transform">
+          <span className="text-4xl font-bold">{vacantRooms.length}</span>
+          <span className="mt-2 text-lg font-medium">Vacant</span>
+        </div>
+        <div className="bg-yellow-500 text-white rounded-xl p-6 flex flex-col items-center shadow">
+          <span className="text-4xl font-bold">{roomStatuses.reduce((sum, r) => sum + r.active_tenants, 0)}</span>
+          <span className="mt-2 text-lg font-medium">Active Tenants</span>
+        </div>
+      </div>
+
+      {/* Room Type Pills */}
+      <div className="flex flex-wrap gap-3 mb-6">
+        {['single','double','triple','quad'].map(type => (
+          <button
+            key={type}
+            onClick={() => setRoomTypeModal(type)}
+            className="px-4 py-2 rounded-full border border-blue-400 bg-blue-50 text-blue-700 font-semibold hover:bg-blue-100 transition"
+          >
+            {type.charAt(0).toUpperCase() + type.slice(1)}
+            {' '}({roomStatuses.filter(r => r.roomType === type).length})
+          </button>
+        ))}
+      </div>
+
+      {/* Room Type Modal */}
+      {roomTypeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 relative">
+            <button onClick={() => setRoomTypeModal(null)} className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
+            <h3 className="text-xl font-bold mb-4">{roomTypeModal.charAt(0).toUpperCase() + roomTypeModal.slice(1)} Rooms</h3>
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr>
+                  <th className="text-left py-2">Room</th>
+                  <th className="text-left py-2">Floor</th>
+                  <th className="text-left py-2">Type</th>
+                  <th className="text-left py-2">Capacity</th>
+                  <th className="text-left py-2">Edit</th>
+                </tr>
+              </thead>
+              <tbody>
+                {roomStatuses.filter(r => r.roomType === roomTypeModal).map(room => (
+                  <tr key={room.room_number}>
+                    <td className="py-2">{room.room_number}</td>
+                    <td className="py-2">{room.floor}</td>
+                    <td className="py-2">
+                      <select
+                        value={editedRoomTypes[room.room_number] ?? room.roomType}
+                        onChange={e => handleRoomTypeChange(room, e.target.value)}
+                        className="border rounded px-2 py-1"
+                      >
+                        <option value="single">Single</option>
+                        <option value="double">Double</option>
+                        <option value="triple">Triple</option>
+                        <option value="quad">Quad</option>
+                      </select>
+                    </td>
+                    <td className="py-2">{room.capacity}</td>
+                    <td className="py-2">
+                      <button onClick={() => saveRoomType(room)} className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">Save</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {activeTab === 'occupied' ? (
         <div className="overflow-x-auto">
