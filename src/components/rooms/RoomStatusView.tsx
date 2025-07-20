@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { getFloorLabel, formatDateDDMMYYYY } from '../../utils/calculations';
+import EditRoomForm from './EditRoomForm';
+import { Room } from '../../types';
 
 interface RoomStatus {
   room_number: string;
@@ -39,6 +41,7 @@ const RoomStatusView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'occupied' | 'vacant'>('occupied');
   const [roomTypeModal, setRoomTypeModal] = useState<string | null>(null);
   const [editedRoomTypes, setEditedRoomTypes] = useState<Record<string, string>>({});
+  const [editRoom, setEditRoom] = useState<Room | null>(null);
 
   useEffect(() => {
     fetchRoomData();
@@ -137,6 +140,35 @@ const RoomStatusView: React.FC = () => {
     } else {
       alert('Failed to update room type');
     }
+  };
+
+  const openEditRoom = (room: RoomStatus) => {
+    setEditRoom({
+      id: '', // You may want to fetch the real id if available
+      roomNumber: room.room_number,
+      floor: room.floor,
+      roomType: room.roomType,
+      capacity: room.capacity,
+      rentAmount: room.total_rent,
+      status: room.room_status as Room['status'],
+    });
+  };
+
+  const handleUpdateRoom = async (id: string, updates: Partial<Room>): Promise<Room> => {
+    const { error } = await supabase
+      .from('rooms')
+      .update(updates)
+      .eq('id', id);
+    let updatedRoom: Room = { id, roomNumber: updates.roomNumber || '', floor: updates.floor || 0, roomType: updates.roomType || 'single', capacity: updates.capacity || 1, rentAmount: updates.rentAmount || 0, status: updates.status || 'vacant' };
+    if (!error) {
+      setRoomStatuses(prev => prev.map(r =>
+        r.room_number === updates.roomNumber ? { ...r, ...updates, room_number: updates.roomNumber || r.room_number } : r
+      ));
+      setEditRoom(null);
+    } else {
+      alert('Failed to update room details');
+    }
+    return updatedRoom;
   };
 
   if (loading) {
@@ -258,45 +290,37 @@ const RoomStatusView: React.FC = () => {
 
       {activeTab === 'occupied' ? (
         <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+          <table className="min-w-full bg-white border border-gray-200 rounded-lg table-fixed">
+            <colgroup>
+              <col style={{ width: '10%' }} /> {/* Room */}
+              <col style={{ width: '10%' }} /> {/* Status */}
+              <col style={{ width: '10%' }} /> {/* Tenants */}
+              <col style={{ width: '10%' }} /> {/* Active */}
+              <col style={{ width: '10%' }} /> {/* Paid */}
+              <col style={{ width: '10%' }} /> {/* Due */}
+              <col style={{ width: '8%' }} /> {/* Adjust */}
+              <col style={{ width: '8%' }} /> {/* Departing */}
+              <col style={{ width: '8%' }} /> {/* Left */}
+              <col style={{ width: '8%' }} /> {/* Pending */}
+              <col style={{ width: '10%' }} /> {/* Total Rent */}
+              <col style={{ width: '10%' }} /> {/* Total Deposit */}
+              <col style={{ width: '6%' }} /> {/* Edit */}
+            </colgroup>
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                  Room
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                  Tenants
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                  Active
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                  Paid
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                  Due
-                </th>
-                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                   Adjust
-                 </th>
-                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                   Departing
-                 </th>
-                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                   Left
-                 </th>
-                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                   Pending
-                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                  Total Rent
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                  Total Deposit
-                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Room</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Status</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Tenants</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Active</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Paid</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Due</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Adjust</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Departing</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Left</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Pending</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Total Rent</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Total Deposit</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Edit</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -304,43 +328,22 @@ const RoomStatusView: React.FC = () => {
                 .filter(room => room.room_status !== 'VACANT')
                 .map((room) => (
                   <tr key={room.room_number} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {room.room_number}
-                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{room.room_number}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getStatusColor(room.room_status)}`}>
-                        {room.room_status}
-                      </span>
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getStatusColor(room.room_status)}`}>{room.room_status}</span>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {room.total_tenants}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      <span className="text-green-600 font-medium">{room.active_tenants}</span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      <span className="text-blue-600 font-medium">{room.paid_tenants}</span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      <span className="text-red-600 font-medium">{room.due_tenants}</span>
-                    </td>
-                                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                       <span className="text-yellow-600 font-medium">{room.adjust_tenants}</span>
-                     </td>
-                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                       <span className="text-orange-600 font-medium">{room.departing_tenants}</span>
-                     </td>
-                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                       <span className="text-gray-600 font-medium">{room.left_tenants}</span>
-                     </td>
-                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                       <span className="text-purple-600 font-medium">{room.pending_tenants}</span>
-                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-medium">
-                      {formatCurrency(room.total_rent)}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-medium">
-                      {formatCurrency(room.total_deposit)}
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{room.total_tenants}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900"><span className="text-green-600 font-medium">{room.active_tenants}</span></td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900"><span className="text-blue-600 font-medium">{room.paid_tenants}</span></td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900"><span className="text-red-600 font-medium">{room.due_tenants}</span></td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900"><span className="text-yellow-600 font-medium">{room.adjust_tenants}</span></td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900"><span className="text-orange-600 font-medium">{room.departing_tenants}</span></td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900"><span className="text-gray-600 font-medium">{room.left_tenants}</span></td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900"><span className="text-purple-600 font-medium">{room.pending_tenants}</span></td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-medium">{formatCurrency(room.total_rent)}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-medium">{formatCurrency(room.total_deposit)}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-center">
+                      <button onClick={() => openEditRoom(room)} className="text-blue-600 hover:text-blue-800 font-medium">Edit</button>
                     </td>
                   </tr>
                 ))}
@@ -407,6 +410,15 @@ const RoomStatusView: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {editRoom && (
+        <EditRoomForm
+          room={editRoom}
+          onUpdateRoom={handleUpdateRoom}
+          onClose={() => setEditRoom(null)}
+          isOpen={!!editRoom}
+        />
+      )}
     </div>
   );
 };
