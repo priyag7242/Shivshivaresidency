@@ -272,6 +272,9 @@ const RoomManagement: React.FC<RoomManagementProps> = ({ rooms, onUpdateRoom, on
     { key: 'room_number', label: 'Room' },
     { key: 'tenants', label: 'Tenants' },
     { key: 'floor', label: 'Floor' },
+    { key: 'capacity', label: 'Capacity' },
+    { key: 'occupancy', label: 'Occupancy' },
+    { key: 'vacant', label: 'Vacant Seats' },
     { key: 'total_rent', label: 'Total Rent' },
     { key: 'total_deposit', label: 'Total Deposit' },
     { key: 'status', label: 'Status' },
@@ -468,6 +471,15 @@ const RoomManagement: React.FC<RoomManagementProps> = ({ rooms, onUpdateRoom, on
                                   {room.tenants.length} tenant{room.tenants.length > 1 ? 's' : ''}
                                 </td>;
                               }
+                            }
+                            if (col.key === 'capacity') {
+                              return <td key={col.key} className="px-3 py-2 border-r border-gray-200 last:border-r-0">{room.capacity}</td>;
+                            }
+                            if (col.key === 'occupancy') {
+                              return <td key={col.key} className="px-3 py-2 border-r border-gray-200 last:border-r-0">{room.tenants.length}</td>;
+                            }
+                            if (col.key === 'vacant') {
+                              return <td key={col.key} className="px-3 py-2 border-r border-gray-200 last:border-r-0">{room.capacity - room.tenants.length}</td>;
                             }
                             if (col.key === 'total_rent') {
                               return <td key={col.key} className="px-3 py-2 text-right border-r border-gray-200 last:border-r-0 font-medium">{formatCurrency(room.total_rent)}</td>;

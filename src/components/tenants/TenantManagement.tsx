@@ -30,13 +30,14 @@ const initialForm: Record<string, any> = {
 
 // Updated table fields to match your requirements
 const keyTableFields = [
+  { key: 'room_number', label: 'Room Number' },
   { key: 'name', label: 'Name' },
   { key: 'mobile', label: 'Mobile' },
-  { key: 'room_number', label: 'Room Number' },
   { key: 'joining_date', label: 'Joining Date' },
   { key: 'monthly_rent', label: 'Rent' },
   { key: 'security_deposit', label: 'Deposit' },
   { key: 'status', label: 'Status' },
+  { key: 'stay_status', label: 'Stay/Leaving' },
 ];
 
 const groupFields = [
@@ -313,7 +314,7 @@ const TenantManagement: React.FC = () => {
             ) : filteredTenants.length === 0 ? (
               <tr><td colSpan={keyTableFields.length + 1} className="border-b border-gray-200">No tenants found.</td></tr>
             ) : filteredTenants.map(tenant => (
-              <tr key={tenant.id} className="hover:bg-blue-50 border-b border-gray-200">
+              <tr key={tenant.id} className={`hover:bg-blue-50 border-b border-gray-200 ${(() => { const dep = tenant.departure_date ? new Date(tenant.departure_date) : null; const now = new Date(); return dep && dep.getFullYear() === now.getFullYear() && dep.getMonth() === now.getMonth() ? 'bg-red-50' : '' })()}`}>
                 {keyTableFields.map(col => {
                   let value = tenant[col.key];
                   if (col.key === 'joining_date' && value) {
@@ -339,6 +340,12 @@ const TenantManagement: React.FC = () => {
                       value === 'prospective' ? 'bg-purple-100 text-purple-700' :
                       'bg-gray-100 text-gray-700'
                     }`}>{value}</span></td>;
+                  }
+                  if (col.key === 'stay_status') {
+                    const now = new Date();
+                    const dep = tenant.departure_date ? new Date(tenant.departure_date) : null;
+                    const isLeaving = dep && dep.getFullYear() === now.getFullYear() && dep.getMonth() === now.getMonth();
+                    return <td key={col.key} className={`px-3 py-2 border-r border-gray-200 last:border-r-0 font-semibold ${isLeaving ? 'text-red-600' : 'text-green-600'}`}>{isLeaving ? 'Leaving this month' : 'Stay'}</td>;
                   }
                   return <td key={col.key} className="px-3 py-2 whitespace-nowrap border-r border-gray-200 last:border-r-0">{value ?? ''}</td>;
                 })}
