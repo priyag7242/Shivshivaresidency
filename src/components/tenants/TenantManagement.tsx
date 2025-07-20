@@ -245,7 +245,11 @@ const TenantManagement: React.FC = () => {
       {/* Dashboard Cards - Only show statuses with tenants */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
         {availableStatuses.map(status => (
-          <div key={status} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col items-center">
+          <div
+            key={status}
+            className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col items-center cursor-pointer hover:shadow-lg transition ${statusFilter === status ? 'ring-2 ring-blue-500' : ''}`}
+            onClick={() => setStatusFilter(status)}
+          >
             <span className="text-2xl font-bold mb-1">{statusCounts[status]}</span>
             <span className="text-xs text-gray-600 capitalize">{status}</span>
           </div>

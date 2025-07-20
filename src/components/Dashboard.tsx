@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, Building, DollarSign, TrendingUp, CheckCircle, Shield, Home, Zap } from 'lucide-react';
 import { useData } from '../hooks/useData';
 import { supabase } from '../lib/supabase';
+import { getFloorLabel } from '../utils/calculations';
 
 interface ElectricityStats {
   totalUnits: number;
@@ -45,6 +46,14 @@ const Dashboard: React.FC<DashboardProps> = ({ onStatClick }) => {
   const monthlyCollection = bills.reduce((sum, bill) => sum + (bill.paymentStatus === 'paid' ? bill.totalAmount : 0), 0);
   const monthlyExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
   const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0;
+
+  // Calculate room type stats
+  const singleRooms = rooms.filter(r => r.roomType === 'single');
+  const doubleRooms = rooms.filter(r => r.roomType === 'double');
+  const tripleRooms = rooms.filter(r => r.roomType === 'triple');
+  const singleOccupied = singleRooms.filter(r => r.status === 'occupied').length;
+  const doubleOccupied = doubleRooms.filter(r => r.status === 'occupied').length;
+  const tripleOccupied = tripleRooms.filter(r => r.status === 'occupied').length;
 
   // Fetch electricity stats
   const fetchElectricityStats = async () => {
@@ -322,6 +331,29 @@ const Dashboard: React.FC<DashboardProps> = ({ onStatClick }) => {
             <div className="flex justify-between items-center">
               <span className="text-gray-800 font-medium">Active Tenants:</span>
               <span className="font-bold text-lg text-green-600">{activeTenants}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Room Type Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="card">
+          <div className="card-header">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Room Type Stats</h3>
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Single Rooms:</span>
+              <span className="font-semibold">{singleOccupied} / {singleRooms.length} occupied</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Double Rooms:</span>
+              <span className="font-semibold">{doubleOccupied} / {doubleRooms.length} occupied</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Triple Rooms:</span>
+              <span className="font-semibold">{tripleOccupied} / {tripleRooms.length} occupied</span>
             </div>
           </div>
         </div>
