@@ -159,14 +159,22 @@ const RoomManagement: React.FC<RoomManagementProps> = ({ rooms, onUpdateRoom, on
   const totalDeposit = roomData.reduce((sum, r) => sum + r.total_deposit, 0);
   const totalActiveTenants = roomData.reduce((sum, r) => sum + r.active_tenants, 0);
 
-  // Group rooms by floor
+  // Group rooms by floor (string label)
   const roomsByFloor = roomData.reduce((acc, room) => {
-    const floor = room.floor || 0;
+    const floor = room.floor || '';
     if (!acc[floor]) acc[floor] = [];
     acc[floor].push(room);
     return acc;
-  }, {} as Record<number, typeof roomData>);
-  const sortedFloors = Object.keys(roomsByFloor).map(Number).sort((a, b) => a - b);
+  }, {} as Record<string, typeof roomData>);
+  // Sort floors: Ground Floor first, then Floor 1, Floor 2, ...
+  const sortedFloors = Object.keys(roomsByFloor).sort((a, b) => {
+    if (a === 'Ground Floor') return -1;
+    if (b === 'Ground Floor') return 1;
+    // Extract number from 'Floor X'
+    const numA = parseInt(a.replace(/[^\d]/g, ''));
+    const numB = parseInt(b.replace(/[^\d]/g, ''));
+    return (numA || 0) - (numB || 0);
+  });
 
   // Collapsible floors state
   const [collapsedFloors, setCollapsedFloors] = useState<Record<number, boolean>>({});
@@ -348,10 +356,10 @@ const RoomManagement: React.FC<RoomManagementProps> = ({ rooms, onUpdateRoom, on
         {sortedFloors.map(floor => (
           <button
             key={floor}
-            onClick={() => scrollToFloor(floor)}
+            onClick={() => scrollToFloor(parseInt(floor.replace(/[^\d]/g, '')))}
             className="flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-800 font-semibold shadow-sm hover:bg-blue-200 transition-colors"
           >
-            <span className="mr-2">🏢</span> Floor {floor}
+            <span className="mr-2">🏢</span> {floor}
             <span className="ml-2 bg-blue-600 text-white rounded-full px-2 py-0.5 text-xs font-bold">{roomsByFloor[floor].length}</span>
           </button>
         ))}
@@ -404,18 +412,18 @@ const RoomManagement: React.FC<RoomManagementProps> = ({ rooms, onUpdateRoom, on
                     const rows = [
                       <tr
                         key={`floor-header-${floor}`}
-                        ref={el => (floorRefs.current[floor] = el)}
+                        ref={el => (floorRefs.current[parseInt(floor.replace(/[^\d]/g, ''))] = el)}
                         className="sticky top-12 z-10 bg-blue-200 shadow-md cursor-pointer"
-                        onClick={() => toggleFloor(floor)}
+                        onClick={() => toggleFloor(parseInt(floor.replace(/[^\d]/g, '')))}
                       >
                         <td colSpan={keyTableFields.length + 1} className="font-bold text-xl px-3 py-4 border-b border-blue-300 flex items-center text-blue-900">
-                          <span className="mr-2">🏢</span> Floor {floor}
+                          <span className="mr-2">🏢</span> {floor}
                           <span className="ml-4 text-xs bg-white text-blue-700 rounded-full px-2 py-0.5 font-bold">{roomsByFloor[floor].length} rooms</span>
-                          <span className="ml-4 text-xs text-blue-700">{collapsedFloors[floor] ? '(Show)' : '(Hide)'}</span>
+                          <span className="ml-4 text-xs text-blue-700">{collapsedFloors[parseInt(floor.replace(/[^\d]/g, ''))] ? '(Show)' : '(Hide)'}</span>
                         </td>
                       </tr>
                     ];
-                    if (!collapsedFloors[floor]) {
+                    if (!collapsedFloors[parseInt(floor.replace(/[^\d]/g, ''))]) {
                       rows.push(...roomsByFloor[floor].map((room, idx) => (
                         <tr key={room.room_number} className={`hover:bg-blue-50 border-b border-gray-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
                           {keyTableFields.map(col => {

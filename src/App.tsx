@@ -127,7 +127,7 @@ function App() {
   const renderActiveTab = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard />;
+        return <Dashboard onStatClick={setActiveTab} />;
       case 'rooms':
         return (
           <RoomManagement

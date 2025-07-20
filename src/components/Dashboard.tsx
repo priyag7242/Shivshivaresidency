@@ -12,7 +12,11 @@ interface ElectricityStats {
   currentMonthAmount: number;
 }
 
-const Dashboard: React.FC = () => {
+interface DashboardProps {
+  onStatClick?: (tab: string) => void;
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ onStatClick }) => {
   const { tenants, rooms, bills, expenses, loading, error } = useData();
   const [electricityStats, setElectricityStats] = useState<ElectricityStats>({
     totalUnits: 0,
@@ -87,60 +91,70 @@ const Dashboard: React.FC = () => {
       value: activeTenants,
       icon: Users,
       color: 'bg-blue-100 text-blue-700',
+      tab: 'tenants',
     },
     {
       label: 'Total Rooms',
       value: totalRooms,
       icon: Building,
       color: 'bg-purple-100 text-purple-700',
+      tab: 'rooms',
     },
     {
       label: 'Total Monthly Rent',
       value: formatCurrency(totalRent),
       icon: DollarSign,
       color: 'bg-green-100 text-green-700',
+      tab: 'rent',
     },
     {
       label: 'Total Security Deposit',
       value: formatCurrency(totalSecurityDeposit),
       icon: Shield,
       color: 'bg-yellow-100 text-yellow-700',
+      tab: 'security',
     },
     {
       label: 'Monthly Collection',
       value: formatCurrency(monthlyCollection),
       icon: TrendingUp,
       color: 'bg-emerald-100 text-emerald-700',
+      tab: 'collection',
     },
     {
       label: 'Monthly Expenses',
       value: formatCurrency(monthlyExpenses),
       icon: TrendingUp,
       color: 'bg-red-100 text-red-700',
+      tab: 'expenses',
     },
     {
       label: 'Electricity Collected',
       value: formatCurrency(electricityStats.totalCollected),
       icon: Zap,
       color: 'bg-orange-100 text-orange-700',
+      tab: 'electricity',
     },
     {
       label: 'Electricity Pending',
       value: formatCurrency(electricityStats.pendingAmount),
       icon: Zap,
       color: 'bg-pink-100 text-pink-700',
+      tab: 'electricity',
     },
     {
       label: 'Occupancy Rate',
       value: `${occupancyRate}%`,
       icon: CheckCircle,
       color: 'bg-teal-100 text-teal-700',
+      tab: 'occupancy',
     },
     {
       label: 'Total Tenants',
       value: tenants.length,
       icon: Home,
       color: 'bg-indigo-100 text-indigo-700',
+      tab: 'tenants',
     },
   ];
 
@@ -175,7 +189,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      <div className="card">
+      <div className="card cursor-pointer hover:shadow-lg transition" onClick={() => onStatClick && onStatClick('dashboard')}>
         <div className="card-header">
           <h1 className="text-3xl font-bold text-neutral-900">Dashboard Overview</h1>
           <p className="text-gray-600 mt-1">Welcome! Here's what's happening with your PG today.</p>
@@ -204,7 +218,11 @@ const Dashboard: React.FC = () => {
         {statCards.map((stat, idx) => {
           const Icon = stat.icon;
           return (
-            <div key={idx} className="card flex items-center p-6">
+            <div
+              key={idx}
+              className={`card flex items-center p-6 cursor-pointer hover:shadow-lg transition`}
+              onClick={() => onStatClick && stat.tab && onStatClick(stat.tab)}
+            >
               <div className={`p-3 rounded-xl mr-4 ${stat.color}`}><Icon className="h-6 w-6" /></div>
               <div>
                 <div className="text-2xl font-bold text-neutral-900">{stat.value}</div>
