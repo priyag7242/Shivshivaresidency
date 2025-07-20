@@ -610,6 +610,18 @@ const RoomManagement: React.FC<RoomManagementProps> = ({ rooms, onUpdateRoom, on
                     <span className="font-medium">Total Deposit:</span>
                     <span className="font-semibold">{formatCurrency(selectedRoom.total_deposit)}</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">Capacity:</span>
+                    <span>{selectedRoom.capacity}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">Current Occupancy:</span>
+                    <span>{selectedRoom.tenants.length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">Vacant Seats:</span>
+                    <span>{selectedRoom.capacity - selectedRoom.tenants.length}</span>
+                  </div>
                 </div>
               </div>
               <div>
@@ -623,6 +635,7 @@ const RoomManagement: React.FC<RoomManagementProps> = ({ rooms, onUpdateRoom, on
                         <div className="font-medium">{tenant.name}</div>
                         <div className="text-sm text-gray-600">Mobile: {tenant.mobile}</div>
                         <div className="text-sm text-gray-600">Rent: {formatCurrency(tenant.monthly_rent)}</div>
+                        <div className="text-sm text-gray-600">Food: <span className={tenant.has_food ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>{tenant.has_food ? 'Yes' : 'No'}</span></div>
                         <div className="text-sm text-gray-600">Deposit: {formatCurrency(tenant.security_deposit)}</div>
                         <div className="text-sm text-gray-600">Status: 
                           <span className={`ml-1 px-2 py-1 rounded-full text-xs font-semibold ${
