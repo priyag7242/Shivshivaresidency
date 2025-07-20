@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Expense } from '../../types';
 import { TrendingUp, Plus, Edit, Trash2, Receipt, Calendar, DollarSign, CreditCard, Package, Users, Wrench, Shield, Eye } from 'lucide-react';
-import { formatCurrency, formatDate } from '../../utils/calculations';
+import { formatCurrency, formatDateDDMMYYYY } from '../../utils/calculations';
 import { expenseCategories, paymentMethods } from '../../data/mockData';
 
 interface ExpenseManagementProps {
@@ -225,7 +225,7 @@ const ExpenseManagement: React.FC<ExpenseManagementProps> = ({
             <h3 className="text-lg font-semibold text-gray-900">Expense Details</h3>
           </div>
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><strong>Date:</strong> {selectedExpense.date}</div>
+            <div><strong>Date:</strong> {formatDateDDMMYYYY(selectedExpense.date)}</div>
             <div><strong>Category:</strong> {selectedExpense.category}</div>
             <div><strong>Description:</strong> {selectedExpense.description}</div>
             <div><strong>Amount:</strong> {formatCurrency(selectedExpense.amount)}</div>
@@ -410,6 +410,9 @@ const ExpenseManagement: React.FC<ExpenseManagementProps> = ({
                   let value = (expense as any)[col.key];
                   if (col.key === 'amount') {
                     return <td key={col.key} className="px-3 py-2 text-right border-r border-gray-200 last:border-r-0">{formatCurrency(value) ?? ''}</td>;
+                  }
+                  if (col.key === 'date') {
+                    return <td key={col.key} className="px-3 py-2 whitespace-nowrap border-r border-gray-200 last:border-r-0">{formatDateDDMMYYYY(value)}</td>;
                   }
                   return <td key={col.key} className="px-3 py-2 whitespace-nowrap border-r border-gray-200 last:border-r-0">{value ?? ''}</td>;
                 })}

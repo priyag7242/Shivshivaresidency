@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { Edit, Trash2, Eye, UserPlus } from 'lucide-react';
+import { formatCurrency, formatDateDDMMYYYY } from '../../utils/calculations';
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL!,
@@ -31,6 +32,7 @@ const initialForm: Record<string, any> = {
 const keyTableFields = [
   { key: 'name', label: 'Name' },
   { key: 'mobile', label: 'Mobile' },
+  { key: 'room_number', label: 'Room Number' },
   { key: 'joining_date', label: 'Joining Date' },
   { key: 'monthly_rent', label: 'Rent' },
   { key: 'security_deposit', label: 'Deposit' },

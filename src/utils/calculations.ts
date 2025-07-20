@@ -207,3 +207,11 @@ export const getCurrentMonthVacancyForecast = (
   const forecasts = calculateRoomVacancyForecast(tenants, rooms, 1);
   return forecasts.length > 0 ? forecasts[0] : null;
 };
+
+export const getFloorLabel = (roomNumber: string): string => {
+  if (!roomNumber) return '';
+  if (/^g\d+/i.test(roomNumber)) return 'Ground Floor';
+  const firstChar = roomNumber.charAt(0);
+  if (!isNaN(Number(firstChar))) return `Floor ${firstChar}`;
+  return '';
+};

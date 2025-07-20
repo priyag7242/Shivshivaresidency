@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Zap, Plus, Edit, Eye, Loader2, Calculator, TrendingUp } from 'lucide-react';
+import { Zap, Plus, Edit, Eye, Loader2, Calculator, TrendingUp, CheckCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { formatCurrency, formatDateDDMMYYYY } from '../../utils/calculations';
 
 interface ElectricityReading {
   id: string;
@@ -162,19 +163,6 @@ const ElectricityManagement: React.FC = () => {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-IN');
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -317,7 +305,7 @@ const ElectricityManagement: React.FC = () => {
                       {formatCurrency(reading.amount)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(reading.reading_date)}
+                      {formatDateDDMMYYYY(reading.reading_date)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -459,7 +447,7 @@ const ElectricityManagement: React.FC = () => {
               </div>
               <div className="flex justify-between">
                 <span className="font-medium">Date:</span>
-                <span>{formatDate(selectedReading.reading_date)}</span>
+                <span>{formatDateDDMMYYYY(selectedReading.reading_date)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-medium">Status:</span>

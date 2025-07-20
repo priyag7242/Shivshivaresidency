@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Bill, Tenant, Payment } from '../../types';
 import { Receipt, Plus, Send, Eye, Calendar, Clock, CheckCircle, Printer, Trash2 } from 'lucide-react';
-import { formatCurrency, formatDate, calculateElectricityCharges, calculateTotalBill } from '../../utils/calculations';
+import { formatCurrency, formatDateDDMMYYYY, calculateElectricityCharges, calculateTotalBill } from '../../utils/calculations';
 import { printReceipt, shareReceiptWhatsApp } from '../../utils/receiptGenerator';
 
 interface BillingManagementProps {
@@ -437,8 +437,8 @@ const BillingManagement: React.FC<BillingManagementProps> = ({
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div><strong>Bill Date:</strong> {formatDate(selectedBill.billDate)}</div>
-              <div><strong>Due Date:</strong> {formatDate(selectedBill.dueDate)}</div>
+              <div><strong>Bill Date:</strong> {formatDateDDMMYYYY(selectedBill.billDate)}</div>
+              <div><strong>Due Date:</strong> {formatDateDDMMYYYY(selectedBill.dueDate)}</div>
             </div>
           </div>
           <div className="flex space-x-3 p-6 pt-0">

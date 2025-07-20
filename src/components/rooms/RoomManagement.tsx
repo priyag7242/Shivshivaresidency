@@ -3,6 +3,7 @@ import { Building, Plus, Loader2, Users, BedSingle, Edit, Trash2, Eye } from 'lu
 import { useData } from '../../hooks/useData';
 import { Room } from '../../types';
 import { supabase } from '../../lib/supabase';
+import { getFloorLabel, formatDateDDMMYYYY } from '../../utils/calculations';
 
 interface RoomManagementProps {
   rooms: Room[];
@@ -109,7 +110,7 @@ const RoomManagement: React.FC<RoomManagementProps> = ({ rooms, onUpdateRoom, on
         if (!acc[roomNumber]) {
           acc[roomNumber] = {
             room_number: roomNumber,
-            floor: parseInt(roomNumber.charAt(0)) || 1,
+            floor: getFloorLabel(roomNumber),
             room_type: 'single', // Default, can be enhanced
             capacity: 1, // Default, can be enhanced
             rent_amount: 0,

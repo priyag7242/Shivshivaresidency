@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import { getFloorLabel, formatDateDDMMYYYY } from '../../utils/calculations';
 
 interface RoomStatus {
   room_number: string;
