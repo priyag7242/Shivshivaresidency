@@ -473,10 +473,10 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({ bills, tenants, p
             </tr>
           </thead>
           <tbody>
-            {payments.slice(0, 10).map((payment) => {
-              const tenant = tenants.find(t => t.id === payment.tenantId);
-              if (!tenant) return null;
-              return (
+          {payments.slice(0, 10).map((payment) => {
+            const tenant = tenants.find(t => t.id === payment.tenantId);
+            if (!tenant) return null;
+            return (
                 <tr key={payment.id} className="hover:bg-blue-50 border-b border-gray-200">
                   {keyTableFields.map(col => {
                     let value = (payment as any)[col.key];
@@ -503,8 +503,8 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({ bills, tenants, p
                     }} className="p-1 rounded hover:bg-red-100"><Trash2 className="h-4 w-4 text-red-600" /></button>
                   </td>
                 </tr>
-              );
-            })}
+            );
+          })}
           </tbody>
         </table>
       </div>

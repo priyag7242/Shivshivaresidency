@@ -184,7 +184,7 @@ const BillingManagement: React.FC<BillingManagementProps> = ({
                   <div className="border-t pt-2">
                     <div className="flex justify-between text-blue-700">
                       <span>Electricity ({(parseInt(formData.electricityReading) || 0) - (selectedTenant.electricityJoiningReading || 0)} units × ₹12):</span>
-                      <span>{formatCurrency(electricityCharges)}</span>
+                    <span>{formatCurrency(electricityCharges)}</span>
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
                       Joining: {selectedTenant.electricityJoiningReading || 0} | Current: {formData.electricityReading || 0}
@@ -573,8 +573,8 @@ const BillingManagement: React.FC<BillingManagementProps> = ({
             ) : bills.length === 0 ? (
               <tr><td colSpan={keyTableFields.length + 1} className="border-b border-gray-200">No bills found.</td></tr>
             ) : bills.map(bill => {
-              const tenant = tenants.find(t => t.id === bill.tenantId);
-              return (
+            const tenant = tenants.find(t => t.id === bill.tenantId);
+            return (
                 <tr key={bill.id} className="hover:bg-blue-50 border-b border-gray-200">
                   {keyTableFields.map(col => {
                     let value = (bill as any)[col.key];
@@ -612,8 +612,8 @@ const BillingManagement: React.FC<BillingManagementProps> = ({
                     <button title="Share bill on WhatsApp" onClick={() => handleShareWhatsAppRow(bill)} className="p-1 rounded hover:bg-green-100"><Send className="h-4 w-4 text-green-600" /></button>
                   </td>
                 </tr>
-              );
-            })}
+            );
+          })}
           </tbody>
         </table>
       </div>

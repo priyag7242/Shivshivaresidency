@@ -25,56 +25,56 @@ const LoginForm: React.FC = () => {
       <div className="w-full max-w-md">
         <div className="card shadow-lg">
           <div className="card-body p-8">
-            <div className="text-center mb-8">
+        <div className="text-center mb-8">
               <h1 className="text-3xl font-bold text-blue-700 mb-2">PG Management</h1>
               <p className="text-lg text-gray-600 font-medium">Sign in to your account</p>
-            </div>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {error && (
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {error && (
                 <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-sm mb-2">
                   {error}
-                </div>
-              )}
-              <div>
+            </div>
+          )}
+          <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                <div className="relative">
+            <div className="relative">
                   <Mail className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                  <input
-                    type="email"
+              <input
+                type="email"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     className="input pl-10"
                     placeholder="Enter your email address"
-                    required
-                  />
-                </div>
-              </div>
-              <div>
+                required
+              />
+            </div>
+          </div>
+          <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                <div className="relative">
+            <div className="relative">
                   <Lock className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                  <input
-                    type="password"
-                    value={password}
+              <input
+                type="password"
+                value={password}
                     onChange={e => setPassword(e.target.value)}
                     className="input pl-10"
-                    placeholder="Enter your password"
+                placeholder="Enter your password"
                     required
-                  />
-                </div>
-              </div>
-              <button
-                type="submit"
+              />
+            </div>
+          </div>
+          <button
+            type="submit"
                 className="btn-primary w-full py-3 text-base font-medium"
-                disabled={loading}
+            disabled={loading}
               >
                 {loading ? (
                   <span className="flex items-center justify-center"><Loader2 className="animate-spin h-5 w-5 mr-2" /> Signing in...</span>
                 ) : (
                   'Sign In'
                 )}
-              </button>
-            </form>
+          </button>
+        </form>
           </div>
         </div>
       </div>

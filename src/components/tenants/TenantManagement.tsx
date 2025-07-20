@@ -255,7 +255,7 @@ const TenantManagement: React.FC = () => {
             <span className="text-xs text-gray-600 capitalize">{status}</span>
           </div>
         ))}
-      </div>
+        </div>
 
       {/* Search Bar and Add Tenant */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
@@ -478,7 +478,7 @@ const TenantManagement: React.FC = () => {
                       </div>
                     ))}
                   </div>
-                </div>
+              </div>
               ))}
               {formError && <div className="text-red-600 text-sm">{formError}</div>}
               <div className="flex justify-end space-x-2 mt-4">

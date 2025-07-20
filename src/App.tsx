@@ -44,26 +44,26 @@ function App() {
     const activeTenants = tenants.filter(tenant => tenant.status === 'active').length;
     const occupiedRooms = rooms.filter(room => room.status === 'occupied').length;
     const totalRooms = rooms.length;
-    
+
     const currentMonth = new Date().toISOString().slice(0, 7);
     const currentMonthBills = bills.filter(bill => bill.billingPeriod === currentMonth);
     const currentMonthExpenses = expenses.filter(expense => expense.date.startsWith(currentMonth));
-    
+
     const monthlyCollection = currentMonthBills
       .filter(bill => bill.paymentStatus === 'paid')
       .reduce((sum, bill) => sum + bill.totalAmount, 0);
-    
+
     const monthlyPending = currentMonthBills
       .filter(bill => bill.paymentStatus === 'unpaid')
       .reduce((sum, bill) => sum + bill.totalAmount, 0);
-    
+
     const monthlyExpenses = currentMonthExpenses
       .reduce((sum, expense) => sum + expense.amount, 0);
-    
+
     const securityDeposit = tenants
       .filter(tenant => tenant.status === 'active')
       .reduce((sum, tenant) => sum + tenant.securityDeposit, 0);
-    
+
     const occupancyRate = calculateOccupancyRate(totalRooms, occupiedRooms);
     const collectionRate = calculateCollectionRate(
       currentMonthBills.length,
