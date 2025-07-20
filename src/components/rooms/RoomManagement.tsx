@@ -288,6 +288,17 @@ const RoomManagement: React.FC<RoomManagementProps> = ({ rooms, onUpdateRoom, on
     }).format(amount);
   };
 
+  // Calculate room type stats
+  const singleRooms = roomData.filter(r => r.room_type === 'single');
+  const doubleRooms = roomData.filter(r => r.room_type === 'double');
+  const tripleRooms = roomData.filter(r => r.room_type === 'triple');
+  const singleOccupied = singleRooms.filter(r => r.status === 'occupied').length;
+  const doubleOccupied = doubleRooms.filter(r => r.status === 'occupied').length;
+  const tripleOccupied = tripleRooms.filter(r => r.status === 'occupied').length;
+  const singleVacant = singleRooms.length - singleOccupied;
+  const doubleVacant = doubleRooms.length - doubleOccupied;
+  const tripleVacant = tripleRooms.length - tripleOccupied;
+
   return (
     <div className="space-y-6">
       {/* Dashboard Cards */}
@@ -332,6 +343,27 @@ const RoomManagement: React.FC<RoomManagementProps> = ({ rooms, onUpdateRoom, on
           <div>
             <div className="text-2xl font-bold">{formatCurrency(totalDeposit)}</div>
             <div className="text-sm text-gray-600">Total Security Deposit</div>
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="card">
+          <div className="card-header">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Room Type Stats</h3>
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Single Rooms:</span>
+              <span className="font-semibold">{singleOccupied} occupied / {singleRooms.length} total / {singleVacant} vacant</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Double Rooms:</span>
+              <span className="font-semibold">{doubleOccupied} occupied / {doubleRooms.length} total / {doubleVacant} vacant</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Triple Rooms:</span>
+              <span className="font-semibold">{tripleOccupied} occupied / {tripleRooms.length} total / {tripleVacant} vacant</span>
+            </div>
           </div>
         </div>
       </div>
