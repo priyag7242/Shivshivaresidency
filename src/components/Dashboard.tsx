@@ -199,63 +199,21 @@ const Dashboard: React.FC<DashboardProps> = ({ onStatClick }) => {
   return (
     <div className="space-y-8 animate-fade-in">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {/* Room Overview */}
-        <div className="card cursor-pointer hover:shadow-lg transition" onClick={() => onStatClick && onStatClick('rooms')}>
-          <div className="flex items-center mb-2"><Building className="h-6 w-6 mr-2 text-purple-700" /><span className="font-bold text-lg">Room Overview</span></div>
-          <div className="flex justify-between mt-2">
-            <div className="flex flex-col items-center">
-              <span className="text-3xl font-bold">{totalRooms}</span>
-              <span className="text-gray-600">Total Rooms</span>
+        {statCards.map((card, index) => (
+          <div
+            key={index}
+            className={`card cursor-pointer hover:shadow-lg transition ${card.color}`}
+            onClick={() => onStatClick && onStatClick(card.tab)}
+          >
+            <div className="flex items-center mb-2">
+              <card.icon className={`h-6 w-6 mr-2 ${card.color.replace('bg-', 'text-')}`} />
+              <span className="font-bold text-lg">{card.label}</span>
             </div>
-            <div className="flex flex-col items-center">
-              <span className="text-3xl font-bold text-red-600">{totalRooms - occupiedRooms}</span>
-              <span className="text-gray-600">Vacant Rooms</span>
-            </div>
-          </div>
-        </div>
-        {/* Tenant Overview */}
-        <div className="card cursor-pointer hover:shadow-lg transition" onClick={() => onStatClick && onStatClick('tenants')}>
-          <div className="flex items-center mb-2"><Users className="h-6 w-6 mr-2 text-blue-700" /><span className="font-bold text-lg">Tenant Overview</span></div>
-          <div className="flex justify-between mt-2">
-            <div className="flex flex-col items-center">
-              <span className="text-3xl font-bold">{tenants.length}</span>
-              <span className="text-gray-600">Total Tenants</span>
-            </div>
-            <div className="flex flex-col items-center">
-              <span className="text-3xl font-bold text-green-600">{activeTenants}</span>
-              <span className="text-gray-600">Active Tenants</span>
+            <div className="flex flex-col items-center mt-2">
+              <span className="text-3xl font-bold">{card.value}</span>
             </div>
           </div>
-        </div>
-        {/* Expense Overview */}
-        <div className="card cursor-pointer hover:shadow-lg transition" onClick={() => onStatClick && onStatClick('expenses')}>
-          <div className="flex items-center mb-2"><TrendingUp className="h-6 w-6 mr-2 text-red-700" /><span className="font-bold text-lg">Expense Overview</span></div>
-          <div className="flex flex-col items-center mt-2">
-            <span className="text-3xl font-bold text-red-600">{formatCurrency(monthlyExpenses)}</span>
-            <span className="text-gray-600">Monthly Expenses</span>
-          </div>
-        </div>
-        {/* Total Monthly Rent */}
-        <div className="card cursor-pointer hover:shadow-lg transition" onClick={() => onStatClick && onStatClick('rent')}>
-          <div className="flex items-center mb-2"><DollarSign className="h-6 w-6 mr-2 text-green-700" /><span className="font-bold text-lg">Total Monthly Rent</span></div>
-          <div className="flex flex-col items-center mt-2">
-            <span className="text-3xl font-bold text-green-600">{formatCurrency(totalRent)}</span>
-          </div>
-        </div>
-        {/* Total Security Deposit */}
-        <div className="card cursor-pointer hover:shadow-lg transition" onClick={() => onStatClick && onStatClick('security')}>
-          <div className="flex items-center mb-2"><Shield className="h-6 w-6 mr-2 text-yellow-700" /><span className="font-bold text-lg">Total Security Deposit</span></div>
-          <div className="flex flex-col items-center mt-2">
-            <span className="text-3xl font-bold text-yellow-600">{formatCurrency(totalSecurityDeposit)}</span>
-          </div>
-        </div>
-        {/* Monthly Collection */}
-        <div className="card cursor-pointer hover:shadow-lg transition" onClick={() => onStatClick && onStatClick('collection')}>
-          <div className="flex items-center mb-2"><TrendingUp className="h-6 w-6 mr-2 text-emerald-700" /><span className="font-bold text-lg">Monthly Collection</span></div>
-          <div className="flex flex-col items-center mt-2">
-            <span className="text-3xl font-bold text-emerald-600">{formatCurrency(monthlyCollection)}</span>
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Financial Summary */}

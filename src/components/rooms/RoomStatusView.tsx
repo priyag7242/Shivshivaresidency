@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { getFloorLabel, formatDateDDMMYYYY } from '../../utils/calculations';
 import EditRoomForm from './EditRoomForm';
 import { Room } from '../../types';
 

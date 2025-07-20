@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
-import RoomManagement from './components/rooms/RoomManagement';
 import RoomStatusView from './components/rooms/RoomStatusView';
 import TenantManagement from './components/tenants/TenantManagement';
 import ElectricityManagement from './components/electricity/ElectricityManagement';
@@ -129,14 +128,7 @@ function App() {
       case 'dashboard':
         return <Dashboard onStatClick={setActiveTab} />;
       case 'rooms':
-        return (
-          <RoomManagement
-            rooms={rooms}
-            onUpdateRoom={updateRoom}
-            onAddRoom={addRoom}
-            loading={dataLoading}
-          />
-        );
+        return <RoomStatusView />;
       case 'room-status':
         return <RoomStatusView />;
       case 'tenants':
