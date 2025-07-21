@@ -20,6 +20,34 @@ const RoomManagement: React.FC = () => {
   // Alert to show the component is loading
   React.useEffect(() => {
     console.log('🔥 COMPONENT MOUNTED - Dashboard should be visible!');
+    
+    // Force DOM manipulation to make sure something shows
+    setTimeout(() => {
+      const body = document.body;
+      const testDiv = document.createElement('div');
+      testDiv.innerHTML = '🚨 JAVASCRIPT INJECTION TEST - DASHBOARD WORKING! 🚨';
+      testDiv.style.cssText = `
+        position: fixed;
+        top: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: red;
+        color: white;
+        padding: 20px;
+        font-size: 24px;
+        font-weight: bold;
+        z-index: 9999;
+        border: 5px solid black;
+      `;
+      body.appendChild(testDiv);
+      
+      // Remove after 5 seconds
+      setTimeout(() => {
+        if (testDiv.parentNode) {
+          testDiv.parentNode.removeChild(testDiv);
+        }
+      }, 5000);
+    }, 1000);
   }, []);
   
   const { rooms, tenants, loading } = useData();
