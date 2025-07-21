@@ -54,7 +54,9 @@ const RoomStatusView: React.FC = () => {
       const { data: statusData, error: statusError } = await supabase
         .from('room_status_view')
         .select('*')
-        .order('room_number');
+        // Sort rooms floor-wise, then by room number within each floor
+        .order('floor', { ascending: true })
+        .order('room_number', { ascending: true });
 
       if (statusError) throw statusError;
 
@@ -62,7 +64,9 @@ const RoomStatusView: React.FC = () => {
       const { data: vacantData, error: vacantError } = await supabase
         .from('vacant_rooms_view')
         .select('*')
-        .order('room_number');
+        // Keep the same floor-wise ordering for vacant rooms
+        .order('floor', { ascending: true })
+        .order('room_number', { ascending: true });
 
       if (vacantError) throw vacantError;
 
