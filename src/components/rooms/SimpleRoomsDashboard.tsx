@@ -15,6 +15,7 @@ interface RoomRow {
 }
 
 const SimpleRoomsDashboard: React.FC = () => {
+  console.log('SimpleRoomsDashboard component is being rendered!');
   const { rooms, tenants, loading } = useData();
   const [roomRows, setRoomRows] = useState<RoomRow[]>([]);
 

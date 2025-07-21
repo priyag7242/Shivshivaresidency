@@ -125,10 +125,12 @@ function App() {
   }
 
   const renderActiveTab = () => {
+    console.log('Current active tab:', activeTab);
     switch (activeTab) {
       case 'dashboard':
         return <Dashboard onStatClick={setActiveTab} />;
       case 'rooms':
+        console.log('Rendering SimpleRoomsDashboard');
         return <SimpleRoomsDashboard />;
       case 'room-status':
         return <RoomStatusView />;
