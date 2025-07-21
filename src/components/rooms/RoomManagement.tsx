@@ -65,6 +65,7 @@ const RoomManagement: React.FC = () => {
       });
 
       console.log('Generated room rows:', rows.length);
+      console.log('🎯 About to render dashboard with', rows.length, 'rooms');
       setRoomRows(rows);
     }
   }, [rooms, tenants, loading]);
