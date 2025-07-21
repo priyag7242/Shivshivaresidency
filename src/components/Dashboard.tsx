@@ -29,9 +29,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onStatClick }) => {
   });
 
   // Calculate stats based on actual tenant statuses in the data
-  const statusList = [
-    'active', 'paid', 'due', 'adjust', 'departing', 'left', 'pending', 'terminated', 'inactive', 'hold', 'prospective'
-  ];
+  // const statusList = [
+  //   'active', 'paid', 'due', 'adjust', 'departing', 'left', 'pending', 'terminated', 'inactive', 'hold', 'prospective'
+  // ];
   
   // const statusCounts = Object.fromEntries(
   //   statusList.map(status => [status, tenants.filter(t => t.status === status).length])
@@ -178,23 +178,23 @@ const Dashboard: React.FC<DashboardProps> = ({ onStatClick }) => {
   //     case 'adjust':
   //       return 'bg-yellow-100 text-yellow-800 border-yellow-200';
   //     case 'departing':
-        return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'left':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-      case 'pending':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'terminated':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'inactive':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-      case 'hold':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'prospective':
-        return 'bg-indigo-100 text-indigo-800 border-indigo-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
+  //       return 'bg-orange-100 text-orange-800 border-orange-200';
+  //     case 'left':
+  //       return 'bg-gray-100 text-gray-800 border-gray-200';
+  //     case 'pending':
+  //       return 'bg-purple-100 text-purple-800 border-purple-200';
+  //     case 'terminated':
+  //       return 'bg-red-100 text-red-800 border-red-200';
+  //     case 'inactive':
+  //       return 'bg-gray-100 text-gray-800 border-gray-200';
+  //     case 'hold':
+  //       return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+  //     case 'prospective':
+  //       return 'bg-indigo-100 text-indigo-800 border-indigo-200';
+  //     default:
+  //       return 'bg-gray-100 text-gray-800 border-gray-200';
+  //   }
+  // };
 
   return (
     <div className="space-y-8 animate-fade-in">

@@ -158,7 +158,7 @@ const RoomStatusView: React.FC = () => {
       .from('rooms')
       .update(updates)
       .eq('id', id);
-    let updatedRoom: Room = { id, roomNumber: updates.roomNumber || '', floor: updates.floor || 0, roomType: updates.roomType || 'single', capacity: updates.capacity || 1, rentAmount: updates.rentAmount || 0, status: updates.status || 'vacant' };
+    const updatedRoom: Room = { id, roomNumber: updates.roomNumber || '', floor: updates.floor || 0, roomType: updates.roomType || 'single', capacity: updates.capacity || 1, rentAmount: updates.rentAmount || 0, status: updates.status || 'vacant' };
     if (!error) {
       setRoomStatuses(prev => prev.map(r =>
         r.room_number === updates.roomNumber ? { ...r, ...updates, room_number: updates.roomNumber || r.room_number } : r

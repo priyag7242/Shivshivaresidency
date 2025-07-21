@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import RoomStatusView from './components/rooms/RoomStatusView';
@@ -8,16 +8,13 @@ import BillingManagement from './components/billing/BillingManagement';
 import PaymentManagement from './components/payments/PaymentManagement';
 import ExpenseManagement from './components/expenses/ExpenseManagement';
 import LoginForm from './components/auth/LoginForm';
-import { DashboardMetrics } from './types';
 import { useAuth } from './hooks/useAuth';
 import { useData } from './hooks/useData';
-import { calculateOccupancyRate, calculateCollectionRate } from './utils/calculations';
 
 function App() {
   const { user, loading: authLoading } = useAuth();
   const {
     tenants,
-    rooms,
     bills,
     payments,
     expenses,
@@ -34,60 +31,49 @@ function App() {
 
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  // Calculate dashboard metrics
-  const calculateMetrics = (): DashboardMetrics => {
-    const activeTenants = tenants.filter(tenant => tenant.status === 'active').length;
-    const occupiedRooms = rooms.filter(room => room.status === 'occupied').length;
-    const totalRooms = rooms.length;
+  // Calculate dashboard metrics (commented out as Dashboard component manages its own data)
+  // const calculateMetrics = (): DashboardMetrics => {
+  //   const activeTenants = tenants.filter(tenant => tenant.status === 'active').length;
+  //   const occupiedRooms = rooms.filter(room => room.status === 'occupied').length;
+  //   const totalRooms = rooms.length;
 
-    const currentMonth = new Date().toISOString().slice(0, 7);
-    const currentMonthBills = bills.filter(bill => bill.billingPeriod === currentMonth);
-    const currentMonthExpenses = expenses.filter(expense => expense.date.startsWith(currentMonth));
+  //   const currentMonth = new Date().toISOString().slice(0, 7);
+  //   const currentMonthBills = bills.filter(bill => bill.billingPeriod === currentMonth);
+  //   const currentMonthExpenses = expenses.filter(expense => expense.date.startsWith(currentMonth));
 
-    const monthlyCollection = currentMonthBills
-      .filter(bill => bill.paymentStatus === 'paid')
-      .reduce((sum, bill) => sum + bill.totalAmount, 0);
+  //   const monthlyCollection = currentMonthBills
+  //     .filter(bill => bill.paymentStatus === 'paid')
+  //     .reduce((sum, bill) => sum + bill.totalAmount, 0);
 
-    const monthlyPending = currentMonthBills
-      .filter(bill => bill.paymentStatus === 'unpaid')
-      .reduce((sum, bill) => sum + bill.totalAmount, 0);
+  //   const monthlyPending = currentMonthBills
+  //     .filter(bill => bill.paymentStatus === 'unpaid')
+  //     .reduce((sum, bill) => sum + bill.totalAmount, 0);
 
-    const monthlyExpenses = currentMonthExpenses
-      .reduce((sum, expense) => sum + expense.amount, 0);
+  //   const monthlyExpenses = currentMonthExpenses
+  //     .reduce((sum, expense) => sum + expense.amount, 0);
 
-    const securityDeposit = tenants
-      .filter(tenant => tenant.status === 'active')
-      .reduce((sum, tenant) => sum + tenant.securityDeposit, 0);
+  //   const securityDeposit = tenants
+  //     .filter(tenant => tenant.status === 'active')
+  //     .reduce((sum, tenant) => sum + tenant.securityDeposit, 0);
 
-    const occupancyRate = calculateOccupancyRate(totalRooms, occupiedRooms);
-    const collectionRate = calculateCollectionRate(
-      currentMonthBills.length,
-      currentMonthBills.filter(bill => bill.paymentStatus === 'paid').length
-    );
+  //   const occupancyRate = calculateOccupancyRate(totalRooms, occupiedRooms);
+  //   const collectionRate = calculateCollectionRate(
+  //     currentMonthBills.length,
+  //     currentMonthBills.filter(bill => bill.paymentStatus === 'paid').length
+  //   );
 
-    return {
-      activeTenants,
-      monthlyCollection,
-      monthlyPending,
-      monthlyExpenses,
-      securityDeposit,
-      occupancyRate,
-      collectionRate
-    };
-  };
+  //   return {
+  //     activeTenants,
+  //     monthlyCollection,
+  //     monthlyPending,
+  //     monthlyExpenses,
+  //     securityDeposit,
+  //     occupancyRate,
+  //     collectionRate
+  //   };
+  // };
 
-  const calculateMetricsCallback = useCallback(() => {
-    return calculateMetrics();
-  }, [tenants, rooms, bills, payments, expenses]);
-
-  const [metrics, setMetrics] = useState<DashboardMetrics>(calculateMetricsCallback());
-
-  // Update metrics when data changes
-  useEffect(() => {
-    if (!dataLoading) {
-      setMetrics(calculateMetricsCallback());
-    }
-  }, [calculateMetricsCallback, dataLoading]);
+  // Metrics calculation removed as Dashboard component manages its own data
 
   // Show loading screen while checking authentication
   if (authLoading) {

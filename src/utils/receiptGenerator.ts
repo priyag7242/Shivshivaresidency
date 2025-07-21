@@ -1,10 +1,9 @@
-import { Tenant, Bill, Payment } from '../types';
-import { formatCurrency, formatDate, getMonthDateRange } from './calculations';
+import { Tenant, Bill } from '../types';
+import { formatCurrency, getMonthDateRange } from './calculations';
 
 export const generateReceiptHTML = (
   tenant: Tenant,
-  bill: Bill,
-  payment?: Payment
+  bill: Bill
 ): string => {
   const electricityUnits = bill.electricityReading - (tenant.lastElectricityReading || tenant.electricityJoiningReading);
   const previousReading = tenant.lastElectricityReading || tenant.electricityJoiningReading;
@@ -236,8 +235,8 @@ export const generateReceiptHTML = (
   `;
 };
 
-export const printReceipt = (tenant: Tenant, bill: Bill, payment?: Payment) => {
-  const receiptHTML = generateReceiptHTML(tenant, bill, payment);
+export const printReceipt = (tenant: Tenant, bill: Bill) => {
+  const receiptHTML = generateReceiptHTML(tenant, bill);
   const printWindow = window.open('', '_blank');
   if (printWindow) {
     printWindow.document.write(receiptHTML);
@@ -246,7 +245,7 @@ export const printReceipt = (tenant: Tenant, bill: Bill, payment?: Payment) => {
   }
 };
 
-export const shareReceiptWhatsApp = (tenant: Tenant, bill: Bill, payment?: Payment) => {
+export const shareReceiptWhatsApp = (tenant: Tenant, bill: Bill) => {
   const electricityUnits = bill.electricityReading - (tenant.lastElectricityReading || tenant.electricityJoiningReading);
   const previousReading = tenant.lastElectricityReading || tenant.electricityJoiningReading;
   const currentReading = bill.electricityReading;
