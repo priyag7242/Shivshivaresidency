@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Expense } from '../../types';
-import { TrendingUp, Plus, Edit, Trash2, Receipt, Calendar, DollarSign, CreditCard, Package, Users, Wrench, Shield, Eye } from 'lucide-react';
+import { TrendingUp, Plus, Edit, Trash2, Receipt, DollarSign, CreditCard, Package, Users, Wrench, Shield, Eye } from 'lucide-react';
 import { formatCurrency, formatDateDDMMYYYY } from '../../utils/calculations';
 import { expenseCategories, paymentMethods } from '../../data/mockData';
 

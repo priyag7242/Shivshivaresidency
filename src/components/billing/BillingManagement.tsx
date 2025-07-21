@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Bill, Tenant, Payment } from '../../types';
 import { Receipt, Plus, Send, Eye, Calendar, Clock, CheckCircle, Printer, Trash2 } from 'lucide-react';
 import { formatCurrency, formatDateDDMMYYYY, calculateElectricityCharges, calculateTotalBill } from '../../utils/calculations';
-import { printReceipt, shareReceiptWhatsApp } from '../../utils/receiptGenerator';
+import { printReceipt } from '../../utils/receiptGenerator';
 
 interface BillingManagementProps {
   bills: Bill[];
@@ -235,11 +235,7 @@ const BillingManagement: React.FC<BillingManagementProps> = ({
     const handlePrintReceipt = () => {
       const tenant = tenants.find(t => t.id === selectedBill.tenantId);
       if (!tenant) return;
-      printReceipt(
-        tenant,
-        selectedBill,
-        payments.find(p => p.billId === selectedBill.id)
-      );
+      printReceipt(tenant, selectedBill);
     };
 
     const handleShareWhatsApp = () => {

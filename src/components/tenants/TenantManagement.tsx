@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { Edit, Trash2, Eye, UserPlus } from 'lucide-react';
-import { formatCurrency, formatDateDDMMYYYY } from '../../utils/calculations';
+// import { formatCurrency, formatDateDDMMYYYY } from '../../utils/calculations';
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL!,
@@ -81,11 +81,11 @@ const TenantManagement: React.FC = () => {
     // eslint-disable-next-line
   }, [searchTerm, statusFilter]);
 
-  // Dashboard stats
-  const totalTenants = tenants.length;
-  const activeTenants = tenants.filter(t => t.status === 'active').length;
-  const noSecurityDeposit = tenants.filter(t => !t.security_deposit || t.security_deposit === 0).length;
-  const noticeGiven = tenants.filter(t => t.notice_given).length;
+  // Dashboard stats (commented out unused variables)
+  // const totalTenants = tenants.length;
+  // const activeTenants = tenants.filter(t => t.status === 'active').length;
+  // const noSecurityDeposit = tenants.filter(t => !t.security_deposit || t.security_deposit === 0).length;
+  // const noticeGiven = tenants.filter(t => t.notice_given).length;
 
   // Add Tenant logic
   const handleAdd = async (e: React.FormEvent) => {

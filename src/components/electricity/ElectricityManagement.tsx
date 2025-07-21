@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Zap, Plus, Edit, Eye, Loader2, Calculator, TrendingUp, CheckCircle } from 'lucide-react';
+import { Zap, Plus, Eye, Loader2, Calculator, TrendingUp, CheckCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { formatCurrency, formatDateDDMMYYYY } from '../../utils/calculations';
 
