@@ -68,7 +68,13 @@ interface FloorStats {
 }
 
 const RoomManagement: React.FC = () => {
+  console.log('🚨🚨🚨 ROOMMANAGEMENT COMPONENT IS LOADING!!! 🚨🚨🚨');
   console.log('🏠 RoomManagement Dashboard - Starting to render...');
+  
+  // Force a DOM alert to make sure we know this component is running
+  React.useEffect(() => {
+    console.log('🔥🔥🔥 ROOMMANAGEMENT COMPONENT MOUNTED! DASHBOARD SHOULD BE VISIBLE! 🔥🔥🔥');
+  }, []);
   
   const { rooms, tenants, loading, addRoom, updateRoom } = useData();
   const [roomsWithTenants, setRoomsWithTenants] = useState<RoomWithTenant[]>([]);

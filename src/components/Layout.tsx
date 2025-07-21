@@ -68,7 +68,10 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, user 
                 return (
                   <button
                     key={item.id}
-                    onClick={() => onTabChange(item.id)}
+                    onClick={() => {
+                      console.log('🔥 CLICKED TAB:', item.id, item.label);
+                      onTabChange(item.id);
+                    }}
                     className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
                       activeTab === item.id
                         ? 'bg-blue-600 text-white'
