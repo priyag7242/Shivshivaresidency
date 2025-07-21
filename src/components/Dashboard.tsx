@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, Building, DollarSign, TrendingUp, CheckCircle, Shield, Home, Zap } from 'lucide-react';
 import { useData } from '../hooks/useData';
 import { supabase } from '../lib/supabase';
-import { getFloorLabel } from '../utils/calculations';
+// import { getFloorLabel } from '../utils/calculations';
 
 interface ElectricityStats {
   totalUnits: number;
@@ -33,9 +33,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onStatClick }) => {
     'active', 'paid', 'due', 'adjust', 'departing', 'left', 'pending', 'terminated', 'inactive', 'hold', 'prospective'
   ];
   
-  const statusCounts = Object.fromEntries(
-    statusList.map(status => [status, tenants.filter(t => t.status === status).length])
-  );
+  // const statusCounts = Object.fromEntries(
+  //   statusList.map(status => [status, tenants.filter(t => t.status === status).length])
+  // );
   
   // Calculate financial totals
   const totalRent = tenants.reduce((sum, tenant) => sum + tenant.monthlyRent, 0);
@@ -167,17 +167,17 @@ const Dashboard: React.FC<DashboardProps> = ({ onStatClick }) => {
     },
   ];
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'paid':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'due':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'adjust':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'departing':
+  // const getStatusColor = (status: string) => {
+  //   switch (status) {
+  //     case 'active':
+  //       return 'bg-green-100 text-green-800 border-green-200';
+  //     case 'paid':
+  //       return 'bg-blue-100 text-blue-800 border-blue-200';
+  //     case 'due':
+  //       return 'bg-red-100 text-red-800 border-red-200';
+  //     case 'adjust':
+  //       return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+  //     case 'departing':
         return 'bg-orange-100 text-orange-800 border-orange-200';
       case 'left':
         return 'bg-gray-100 text-gray-800 border-gray-200';

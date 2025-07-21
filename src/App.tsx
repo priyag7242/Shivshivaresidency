@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import RoomStatusView from './components/rooms/RoomStatusView';
@@ -23,10 +23,6 @@ function App() {
     expenses,
     loading: dataLoading,
     error,
-    addTenant,
-    updateTenant,
-    addRoom,
-    updateRoom,
     generateBill,
     updateBill,
     recordPayment,
@@ -80,14 +76,18 @@ function App() {
     };
   };
 
-  const [metrics, setMetrics] = useState<DashboardMetrics>(calculateMetrics());
+  const calculateMetricsCallback = useCallback(() => {
+    return calculateMetrics();
+  }, [tenants, rooms, bills, payments, expenses]);
+
+  const [metrics, setMetrics] = useState<DashboardMetrics>(calculateMetricsCallback());
 
   // Update metrics when data changes
   useEffect(() => {
     if (!dataLoading) {
-      setMetrics(calculateMetrics());
+      setMetrics(calculateMetricsCallback());
     }
-  }, [tenants, rooms, bills, payments, expenses, dataLoading]);
+  }, [calculateMetricsCallback, dataLoading]);
 
   // Show loading screen while checking authentication
   if (authLoading) {
