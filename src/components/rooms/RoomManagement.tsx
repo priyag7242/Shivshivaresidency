@@ -16,6 +16,12 @@ interface RoomRow {
 
 const RoomManagement: React.FC = () => {
   console.log('🏠 RoomManagement component is being rendered!');
+  
+  // Alert to show the component is loading
+  React.useEffect(() => {
+    console.log('🔥 COMPONENT MOUNTED - Dashboard should be visible!');
+  }, []);
+  
   const { rooms, tenants, loading } = useData();
   const [roomRows, setRoomRows] = useState<RoomRow[]>([]);
 
@@ -83,6 +89,22 @@ const RoomManagement: React.FC = () => {
 
   return (
     <div className="p-6">
+      {/* SUPER OBVIOUS TEST ELEMENT */}
+      <div style={{
+        backgroundColor: 'red',
+        color: 'white',
+        padding: '20px',
+        fontSize: '24px',
+        fontWeight: 'bold',
+        textAlign: 'center',
+        margin: '20px 0',
+        border: '5px solid black'
+      }}>
+        🚨 THIS IS THE NEW DASHBOARD! 🚨
+        <br />
+        If you see this, the component is working!
+      </div>
+      
       {/* SUCCESS BANNER */}
       <div className="bg-green-100 border-l-4 border-green-500 p-4 mb-6">
         <div className="flex">
