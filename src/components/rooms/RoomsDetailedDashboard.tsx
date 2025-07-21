@@ -247,11 +247,15 @@ const RoomsDetailedDashboard: React.FC = () => {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
+      {/* DEBUG: This should be visible if the component is loading */}
+      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        ✅ RoomsDetailedDashboard is loading correctly!
+      </div>
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Rooms Management</h1>
-          <p className="text-gray-600">Detailed view of all rooms and tenant information</p>
+          <h1 className="text-3xl font-bold text-blue-600 mb-2">🏠 Rooms Detailed Dashboard</h1>
+          <p className="text-gray-600">Complete view of all rooms with tenant information and statistics</p>
         </div>
         <button
           onClick={() => setShowAddForm(true)}
