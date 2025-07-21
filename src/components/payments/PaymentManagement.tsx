@@ -479,7 +479,7 @@ const PaymentManagement: React.FC<PaymentManagementProps> = ({ bills, tenants, p
             return (
                 <tr key={payment.id} className="hover:bg-blue-50 border-b border-gray-200">
                   {keyTableFields.map(col => {
-                    let value = (payment as any)[col.key];
+                    const value = (payment as any)[col.key];
                     if (col.key === 'tenant_id') {
                       return <td key={col.key} className="px-3 py-2 whitespace-nowrap border-r border-gray-200 last:border-r-0">{tenant ? tenant.name : value}</td>;
                     }

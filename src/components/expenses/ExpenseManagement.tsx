@@ -407,7 +407,7 @@ const ExpenseManagement: React.FC<ExpenseManagementProps> = ({
             ) : expenses.map(expense => (
               <tr key={expense.id} className="hover:bg-blue-50 border-b border-gray-200">
                 {keyTableFields.map(col => {
-                  let value = (expense as any)[col.key];
+                  const value = (expense as any)[col.key];
                   if (col.key === 'amount') {
                     return <td key={col.key} className="px-3 py-2 text-right border-r border-gray-200 last:border-r-0">{formatCurrency(value) ?? ''}</td>;
                   }

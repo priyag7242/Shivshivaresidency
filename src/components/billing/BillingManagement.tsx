@@ -577,7 +577,7 @@ const BillingManagement: React.FC<BillingManagementProps> = ({
             return (
                 <tr key={bill.id} className="hover:bg-blue-50 border-b border-gray-200">
                   {keyTableFields.map(col => {
-                    let value = (bill as any)[col.key];
+                    const value = (bill as any)[col.key];
                     if (col.key === 'tenantId') {
                       return <td key={col.key} className="px-3 py-2 whitespace-nowrap border-r border-gray-200 last:border-r-0">{tenant ? tenant.name : value}</td>;
                     }
