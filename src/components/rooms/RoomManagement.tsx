@@ -371,6 +371,25 @@ const RoomManagement: React.FC = () => {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
+      {/* SUPER OBVIOUS TEST BANNER */}
+      <div style={{
+        backgroundColor: '#FF0000',
+        color: 'white',
+        padding: '20px',
+        fontSize: '28px',
+        fontWeight: 'bold',
+        textAlign: 'center',
+        margin: '20px 0',
+        border: '5px solid black',
+        borderRadius: '10px'
+      }}>
+        🚨 NEW DASHBOARD IS WORKING! 🚨
+        <br />
+        <div style={{ fontSize: '18px', marginTop: '10px' }}>
+          Total Rooms: {stats.totalRooms} | Occupied: {stats.occupiedRooms} | Revenue: ₹{stats.totalRent.toLocaleString()}
+        </div>
+      </div>
+
       {/* Success Banner */}
       <div className="bg-gradient-to-r from-green-50 to-blue-50 border-l-4 border-green-400 p-6 mb-8 rounded-lg shadow-sm">
         <div className="flex">
