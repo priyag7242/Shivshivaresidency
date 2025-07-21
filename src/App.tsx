@@ -8,6 +8,7 @@ import BillingManagement from './components/billing/BillingManagement';
 import PaymentManagement from './components/payments/PaymentManagement';
 import ExpenseManagement from './components/expenses/ExpenseManagement';
 import LoginForm from './components/auth/LoginForm';
+import RoomManagement from './components/rooms/RoomManagement';
 import { DashboardMetrics } from './types';
 import { useAuth } from './hooks/useAuth';
 import { useData } from './hooks/useData';
@@ -128,7 +129,7 @@ function App() {
       case 'dashboard':
         return <Dashboard onStatClick={setActiveTab} />;
       case 'rooms':
-        return <RoomStatusView />;
+        return <RoomManagement />;
       case 'room-status':
         return <RoomStatusView />;
       case 'tenants':
